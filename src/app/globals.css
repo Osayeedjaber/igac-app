@@ -1,0 +1,236 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  /* IGAC Theme - Forced Dark Green & Gold */
+
+  /* Background: #051b11 (Deep Green) */
+  --background: #051b11;
+  /* Foreground: White/Off-white */
+  --foreground: #f8fafc;
+
+  /* Primary: #d4af37 (Gold) */
+  --primary: #d4af37;
+  /* Primary FG: Deep Green */
+  --primary-foreground: #051b11;
+
+  /* Secondary: Slightly lighter green for contrast */
+  --secondary: #0a2e1d;
+  --secondary-foreground: #f8fafc;
+
+  /* Muted: Lighter green with transparency or dullness */
+  --muted: #0f3d2a;
+  --muted-foreground: #94a3b8;
+
+  /* Accent: For hover states, a rich green */
+  --accent: #0f3d2a;
+  --accent-foreground: #d4af37;
+
+  /* Borders & Inputs */
+  --border: #1e453e;
+  --input: #1e453e;
+  --ring: #d4af37;
+
+  --card: #082216;
+  /* Slightly lighter than bg */
+  --card-foreground: #f8fafc;
+
+  --popover: #051b11;
+  --popover-foreground: #f8fafc;
+
+  --destructive: oklch(0.577 0.245 27.325);
+
+  --radius: 0.625rem;
+
+  /* Charts - kept as oklch or hex */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+
+  --sidebar: #051b11;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #d4af37;
+  --sidebar-primary-foreground: #051b11;
+  --sidebar-accent: #0f3d2a;
+  --sidebar-accent-foreground: #d4af37;
+  --sidebar-border: #1e453e;
+  --sidebar-ring: #d4af37;
+}
+
+/* Force same values for .dark class to prevent overrides */
+.dark {
+  --background: #051b11;
+  --foreground: #f8fafc;
+  --primary: #d4af37;
+  --primary-foreground: #051b11;
+  --secondary: #0a2e1d;
+  --secondary-foreground: #f8fafc;
+  --muted: #0f3d2a;
+  --muted-foreground: #94a3b8;
+  --accent: #0f3d2a;
+  --accent-foreground: #d4af37;
+  --border: #1e453e;
+  --input: #1e453e;
+  --ring: #d4af37;
+  --card: #082216;
+  --card-foreground: #f8fafc;
+  --popover: #051b11;
+  --popover-foreground: #f8fafc;
+}
+
+html,
+body {
+  background-color: #051b11 !important;
+  /* Fallback and forced */
+  color: var(--foreground);
+  font-family: var(--font-body);
+  position: relative;
+  overflow-x: clip;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+@layer utilities {
+  @keyframes infinite-scroll {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-infinite-scroll {
+    animation: infinite-scroll 40s linear infinite;
+  }
+
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%) rotate(45deg);
+    }
+
+    100% {
+      transform: translateX(200%) rotate(45deg);
+    }
+  }
+
+  .animate-shine {
+    animation: shine 3s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: 0 0;
+    }
+
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+}
+
+.animate-infinite-scroll:hover {
+  animation-play-state: paused;
+}
+
+@layer base {
+
+  /* Force Sans-Serif on Navigation to prevent persistent Serif styling */
+  header,
+  nav,
+  footer h4,
+  .font-sans {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif !important;
+  }
+
+  /* Restore Serif for display headings */
+  h1,
+  h2,
+  h3,
+  .font-serif {
+    font-family: var(--font-playfair), ui-serif, Georgia, serif;
+  }
+}
