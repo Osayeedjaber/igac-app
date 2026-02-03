@@ -17,8 +17,19 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd /home/igacinfo/public_html
+            # 1. Enter the application directory
+            cd /home/igacinfo/public_html/igac-app
+            
+            # 2. Sync code from GitHub
             git pull origin main
-            npm install
+            
+            # 3. Use CloudLinux selector to install modules in the virtual env
+            # This avoids creating a physical node_modules folder in the root
+            /usr/bin/cloudlinux-selector install-modules --json --interpreter node --app-root /home/igacinfo/public_html/igac-app
+            
+            # 4. Build the Next.js project
             npm run build
+            
+            # 5. Restart the app (Selector looks for this trigger)
+            mkdir -p tmp
             touch tmp/restart.txt
