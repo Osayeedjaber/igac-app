@@ -36,8 +36,8 @@ export function Hero() {
                     </motion.div>
                 </div>
 
-                <div className="flex flex-col items-center max-w-4xl mx-auto text-center">
-                    <h1 className="text-2xl md:text-5xl lg:text-7xl font-bold font-serif mb-6 tracking-tight drop-shadow-xl leading-none text-center">
+                <div className="flex flex-col items-center w-full max-w-[95vw] mx-auto text-center">
+                    <h1 className="w-full whitespace-nowrap text-[3.5vw] md:text-5xl lg:text-6xl xl:text-7xl font-bold font-serif mb-6 tracking-tight drop-shadow-xl leading-none text-center">
                         <ShinyText
                             text="International Global Affairs Council"
                             disabled={false}

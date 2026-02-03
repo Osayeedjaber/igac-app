@@ -8,8 +8,8 @@ Your project seems to be in the `igac-app` folder inside your repository.
 **You must configure Vercel to look in the correct folder:**
 1. Go to your Vercel Dashboard -> Project Settings -> **General**.
 2. Look for **Root Directory**.
-3. It should be set to `igac-app` (if that is the folder name in your git repo).
-4. If it is currently `./` (root), Vercel is trying to build the parent folder, failing to find `package.json` at the root, and deploying nothing (or a 404).
+3. It should be set to `./` (just leave it empty or type ./).
+4. **Since your repo root contains the project files**, this is the correct setting. Ensure you save and redeploy.
 
 ## 2. Verify Build Command
 Ensure the **Framework Preset** is set to **Next.js**.
