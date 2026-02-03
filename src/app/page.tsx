@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: "IGAC",
     images: [
       {
-        url: "/past events/igacmuns2bannerjpg.jpg",
+        url: "/past-events/igacmuns2bannerjpg.jpg",
         width: 1200,
         height: 630,
         alt: "IGAC Conference Banner",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "IGAC | International Global Affairs Council",
     description: "The biggest Model United Nations conference in South East Asia.",
-    images: ["/past events/igacmuns2bannerjpg.jpg"],
+    images: ["/past-events/igacmuns2bannerjpg.jpg"],
   },
 };
 
