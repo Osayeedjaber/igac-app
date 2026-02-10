@@ -3,30 +3,32 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
-import { teamData } from "@/config/site-data";
 import { Facebook, Instagram, Linkedin, Mail } from "lucide-react";
 
-// Triple for infinite loop and better coverage
-const carouselItems = [...teamData.corePanel, ...teamData.corePanel, ...teamData.corePanel];
+type Member = {
+    name: string;
+    role: string;
+    image: string;
+    socials: Record<string, string>;
+};
 
-export function InfiniteCarousel() {
+export function InfiniteCarousel({ members }: { members: Member[] }) {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+    if (!members || members.length === 0) return null;
 
     return (
         <div className="relative w-full overflow-hidden py-24">
-            {/* Background decorative elements */}
-
-            {/* Gradient masks for smooth fade edges - Deepened for luxury feel */}
+            {/* Gradient masks for smooth fade edges */}
             <div className="absolute left-0 top-0 bottom-0 w-64 bg-gradient-to-r from-[#051b11] via-[#051b11]/80 to-transparent z-20 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-64 bg-gradient-to-l from-[#051b11] via-[#051b11]/80 to-transparent z-20 pointer-events-none" />
 
             {/* The Moving Track */}
             <div className="flex w-fit animate-infinite-scroll group/track">
-                {/* We render the set twice to ensure seamless looping */}
                 {[0, 1].map((setIndex) => (
                     <div key={setIndex} className="flex gap-8 px-4">
-                        {teamData.corePanel.map((member, idx) => {
-                            const globalIdx = setIndex * teamData.corePanel.length + idx;
+                        {members.map((member, idx) => {
+                            const globalIdx = setIndex * members.length + idx;
                             const isHovered = hoveredIndex === globalIdx;
                             const isAnyHovered = hoveredIndex !== null;
                             const socials = member.socials as any;
@@ -55,24 +57,19 @@ export function InfiniteCarousel() {
 
                                     {/* Socials appearing on hover */}
                                     <div className={`absolute inset-0 flex items-center justify-center gap-4 transition-all duration-700 z-30 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                                        {socials?.linkedin && (
+                                        {socials?.linkedin && socials.linkedin !== "#" && (
                                             <a href={socials.linkedin} className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-primary hover:text-black hover:border-primary transition-all duration-300">
                                                 <Linkedin size={20} />
                                             </a>
                                         )}
-                                        {socials?.instagram && (
+                                        {socials?.instagram && socials.instagram !== "#" && (
                                             <a href={socials.instagram} className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-primary hover:text-black hover:border-primary transition-all duration-300">
                                                 <Instagram size={20} />
                                             </a>
                                         )}
-                                        {socials?.facebook && (
+                                        {socials?.facebook && socials.facebook !== "#" && (
                                             <a href={socials.facebook} className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-primary hover:text-black hover:border-primary transition-all duration-300">
                                                 <Facebook size={20} />
-                                            </a>
-                                        )}
-                                        {socials?.email && (
-                                            <a href={`mailto:${socials.email}`} className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-primary hover:text-black hover:border-primary transition-all duration-300">
-                                                <Mail size={20} />
                                             </a>
                                         )}
                                     </div>

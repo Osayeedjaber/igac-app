@@ -3,9 +3,16 @@
 import { Reveal } from "@/components/motion/reveal";
 import { InfiniteCarousel } from "@/components/motion/infinite-carousel";
 import Image from "next/image";
-import { teamData } from "@/config/site-data";
 
-export function Team() {
+type Member = {
+    name: string;
+    role: string;
+    image: string;
+    quote?: string;
+    socials: Record<string, string>;
+};
+
+export function Team({ governingBody, corePanel }: { governingBody: Member[]; corePanel: Member[] }) {
     return (
         <section id="governing-body" className="py-24 bg-background relative overflow-hidden">
 
@@ -20,7 +27,7 @@ export function Team() {
                 </Reveal>
 
                 <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                    {teamData.governingBody.map((leader, index) => (
+                    {governingBody.map((leader, index) => (
                         <Reveal key={index} delay={0.2 * index} width="100%">
                             <div className="group relative overflow-hidden rounded-sm bg-secondary/5 border border-white/5 hover:border-primary/30 transition-all duration-500">
                                 {/* Image Container */}
@@ -39,7 +46,7 @@ export function Team() {
                                     <span className="text-primary text-xs font-bold uppercase tracking-widest mb-2 block">{leader.role}</span>
                                     <h3 className="text-2xl font-serif font-bold text-foreground mb-4">{leader.name}</h3>
                                     <p className="text-muted-foreground text-sm italic opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 border-l-2 border-primary pl-4">
-                                        "{leader.quote}"
+                                        &ldquo;{leader.quote}&rdquo;
                                     </p>
                                 </div>
                             </div>
@@ -58,7 +65,7 @@ export function Team() {
                 </div>
 
                 {/* Full width carousel */}
-                <InfiniteCarousel />
+                <InfiniteCarousel members={corePanel} />
             </div>
 
         </section>

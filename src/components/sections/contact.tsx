@@ -40,7 +40,7 @@ export function Contact() {
                         <div className="p-6 border border-white/5 rounded-sm bg-white/[0.02]">
                             <h3 className="text-xl font-bold text-foreground mb-2">Contact</h3>
                             <p className="text-muted-foreground">
-                                Email: info@igac.org<br />
+                                Email: info@igac.info<br />
                                 Phone: +880 1234 567890
                             </p>
                         </div>

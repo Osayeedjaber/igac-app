@@ -56,7 +56,7 @@ export function Navbar() {
                                 className="object-contain"
                             />
                         </div>
-                        <span className="text-xl md:text-2xl font-bold tracking-tighter text-foreground font-sans hidden md:block">
+                        <span className="text-3xl md:text-2xl font-bold tracking-tighter text-foreground font-sans block">
                             IGAC<span className="text-primary transition-all duration-300 group-hover/logo:ml-1">.</span>
                         </span>
                     </Link>

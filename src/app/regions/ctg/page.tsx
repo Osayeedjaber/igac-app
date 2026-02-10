@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import CTGRegionPage from "./CTGClient";
+import { getTeamMembers } from "@/lib/data";
 
 export const metadata: Metadata = {
     title: "IGAC Chattogram | Regional Division",
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "IGAC Chattogram | Regional Division",
         description: "The official regional division of IGAC in Chattogram.",
-        url: "https://igac.org/regions/ctg",
+        url: "https://igac.info/regions/ctg",
         siteName: "IGAC",
         images: [
             {
@@ -28,6 +29,19 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <CTGRegionPage />;
+export const revalidate = 60;
+
+export default async function Page() {
+    const teamData = await getTeamMembers();
+    
+    // Ensure we have fallback data for CTG
+    const ctgData = {
+        head: teamData.ctgHead,
+        corePanel: teamData.ctgCore || [],
+        heads: teamData.ctgHeads || [],
+        deputies: teamData.ctgDeputies || [],
+        executives: teamData.ctgExecutives || [],
+    };
+    
+    return <CTGRegionPage ctgData={ctgData} />;
 }

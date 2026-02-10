@@ -7,9 +7,9 @@ export const siteConfig = {
         address: "Dhaka, Bangladesh",
     },
     socials: {
-        facebook: "#",
-        instagram: "#",
-        linkedin: "#",
+        facebook: "https://www.facebook.com/igabordd",
+        instagram: "https://www.instagram.com/igabordd",
+        linkedin: "",
     }
 };
 
@@ -63,15 +63,22 @@ export const teamData = {
         author: "Al Rashidus Sabru Farabi",
         role: "President of INTERNATIONAL GLOBAL AFFAIRS COUNCIL"
     },
+    gsMessage: {
+        title: "Driving the Mission Forward",
+        heading: "Message from the General Secretary",
+        content: "Behind every successful conference lies a team united by purpose and driven by passion. As General Secretary, my commitment is to ensure that IGAC operates with precision, transparency, and unwavering dedication to our delegates. We are not just organizing events; we are crafting experiences that transform young minds into confident global citizens. Every detail matters, every delegate counts, and together, we are building a legacy of excellence that will inspire generations to come.",
+        author: "Areeb Farooqui",
+        role: "General Secretary of INTERNATIONAL GLOBAL AFFAIRS COUNCIL"
+    },
     corePanel: [
-        { name: "Abid Fahad Khan", role: "General Secretary", image: "/corepanel/GENERAL SECRETARY _ ABID FAHAD KHAN.jpg", socials: { facebook: "#", instagram: "#" } },
-        { name: "Miftahul Jannat Muntaha", role: "Organizing Secretary", image: "/corepanel/ORGANIZING SECRETARY _ miftahul Jannat muntaha.jpg", socials: { facebook: "#", instagram: "#" } },
-        { name: "Arefin Abir Saad", role: "Organizing Secretary", image: "/corepanel/ORGANIZING SECRETARY arefin abir saad.jpg", socials: { facebook: "#", instagram: "#" } },
-        { name: "Afsan Talukder", role: "Organizing Secretary", image: "/corepanel/afsan talukder  ORGANIZING SECRETARY.jpg", socials: { facebook: "#", instagram: "#" } },
-        { name: "Areeb Farooqui", role: "Add. General Secretary", image: "/corepanel/areeb farooqui.jpg ADDITIONAL GENERAL SECRETARY.JPG", socials: { facebook: "#", instagram: "#" } },
+        { name: "Areeb Farooqui", role: "General Secretary", image: "/corepanel/areeb farooqui.jpg GENERAL SECRETARY.JPG", socials: { facebook: "#", instagram: "#" } },
         { name: "Farhat Lamisha", role: "Joint Secretary", image: "/corepanel/joint secretar Farhat lamisha.jpg", socials: { facebook: "#", instagram: "#" } },
         { name: "Huzaifa Abrar Sahal", role: "Joint Secretary", image: "/corepanel/joint secretary HUZAIFA ABRAR SAHAL.jpg", socials: { facebook: "#", instagram: "#" } },
         { name: "Nusrat Jahan", role: "Joint Secretary", image: "/corepanel/joint secretary NUSRAT JAHAN.jpg", socials: { facebook: "#", instagram: "#" } },
+        { name: "Ashikul Hoque Abrar", role: "Ad. Joint Secretary", image: "/Team/Ashikul Hoque Abrar.jpeg", socials: { facebook: "https://www.facebook.com/share/1AWTJsgAsE/?mibextid=wwXIfr", instagram: "https://www.instagram.com/ab_hoque707" } },
+        { name: "Miftahul Jannat Muntaha", role: "Organizing Secretary", image: "/corepanel/ORGANIZING SECRETARY _ miftahul Jannat muntaha.jpg", socials: { facebook: "#", instagram: "#" } },
+        { name: "Arefin Abir Saad", role: "Organizing Secretary", image: "/corepanel/ORGANIZING SECRETARY arefin abir saad.jpg", socials: { facebook: "#", instagram: "#" } },
+        { name: "Afsan Talukder", role: "Organizing Secretary", image: "/corepanel/afsan talukder  ORGANIZING SECRETARY.jpg", socials: { facebook: "#", instagram: "#" } },
     ],
     heads: [
         { 
@@ -138,9 +145,10 @@ export const teamData = {
         },
         { 
             name: "Mohammad Al Rhyne", 
-            role: "Deputy Head of Graphics and Creative Director", 
-            department: "Graphics and Creative Director", 
+            role: "Deputy Head of Creative Design and Media", 
+            department: "Creative Design and Media", 
             image: "/Team/Mohammad Al Rhyne.jpg",
+            imageClassName: "scale-125 translate-y-4 group-hover:scale-135",
             socials: { 
                 facebook: "https://www.facebook.com/mohammad.al.rhyne", 
                 instagram: "https://www.instagram.com/_rhyneee._/" 

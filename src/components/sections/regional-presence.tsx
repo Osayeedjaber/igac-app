@@ -6,8 +6,16 @@ import { Anchor, Ship, Waves, Instagram, MapPin, Target, Globe2 } from "lucide-r
 import Link from "next/link";
 import { Button } from "@/components/ui/button-premium";
 
-export function RegionalPresence() {
+type MemberProp = {
+    name: string;
+    role: string;
+    image: string;
+    socials: Record<string, string>;
+};
+
+export function RegionalPresence({ ctgHead }: { ctgHead?: MemberProp }) {
     const { ctg } = teamData.regions;
+    const head = ctgHead || ctg.head;
 
     return (
         <section className="relative py-48 md:py-64 overflow-hidden bg-[#022c22]/40 border-y border-emerald-500/10 backdrop-blur-sm group/ctg">
@@ -99,8 +107,8 @@ export function RegionalPresence() {
 
                             <div className="relative border-4 border-emerald-500/30 rounded-[3rem] p-3 bg-emerald-950/20 backdrop-blur-md shadow-2xl">
                                 <ProfileCard
-                                    {...ctg.head}
-                                    image="/ctghead.jpg"
+                                    {...head}
+                                    image={head.image || "/ctghead.jpg"}
                                     delay={0.2}
                                 />
                             </div>

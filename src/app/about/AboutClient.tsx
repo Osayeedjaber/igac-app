@@ -13,7 +13,22 @@ import FlowingMenu from "@/components/FlowingMenu";
 import ShinyText from "@/components/ShinyText";
 
 
-export function AboutClient() {
+type MemberProp = {
+    name: string;
+    role: string;
+    image: string;
+    socials: Record<string, string>;
+};
+
+type PresidentProp = {
+    name: string;
+    role: string;
+    image: string;
+    quote?: string;
+    socials: Record<string, string>;
+};
+
+export function AboutClient({ ctgHead, president }: { ctgHead?: MemberProp; president?: PresidentProp }) {
     const { scrollYProgress } = useScroll();
     const scaleX = useSpring(scrollYProgress, {
         stiffness: 100,
@@ -59,7 +74,7 @@ export function AboutClient() {
             <div className="relative z-10 space-y-40 md:space-y-64">
                 <About />
 
-                <FoundingStory />
+                <FoundingStory president={president} />
 
                 <Topics />
 
@@ -75,7 +90,7 @@ export function AboutClient() {
 
                 <Journey />
 
-                <RegionalPresence />
+                <RegionalPresence ctgHead={ctgHead} />
 
                 {/* Mission & Vision - Re-styled for cinematic feel */}
                 <section className="container mx-auto px-6">

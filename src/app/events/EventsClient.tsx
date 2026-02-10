@@ -1,20 +1,50 @@
 "use client";
-import { eventsArchive, eventStats } from "@/config/site-data";
+import { eventStats } from "@/config/site-data";
 import { Reveal } from "@/components/motion/reveal";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Globe2, Calendar, Users, Award, ShieldCheck, Landmark } from "lucide-react";
 
-export default function EventsPage() {
-    // 1. Data Selection
-    const featuredEvent = eventsArchive.find(e => e.tag === "FEATURED") || eventsArchive[0];
-    const otherEvents = eventsArchive.filter(e => e !== featuredEvent);
+type EventData = {
+  id: string;
+  title: string;
+  subtitle: string;
+  date: string;
+  year: number;
+  month: string;
+  location: string;
+  image: string;
+  description: string;
+  division: string;
+  tag: string;
+  stats: Record<string, string>;
+  highlights: string[];
+  sort_order: number;
+  featured: boolean;
+  is_visible: boolean;
+};
 
-    // Flatten and Sort the archive (Latest first)
-    const sortedArchiveEvents = [...otherEvents].sort((a, b) => {
-        if ((b.year || 0) !== (a.year || 0)) return (b.year || 0) - (a.year || 0);
-        return 0;
-    });
+type SiteStats = {
+  total_events: string;
+  total_delegates: string;
+  years_active: string;
+};
+
+interface EventsPageProps {
+  events: EventData[];
+  stats?: SiteStats;
+}
+
+export default function EventsPage({ events, stats }: EventsPageProps) {
+    // Filter to only visible events and sort by sort_order (already sorted from server, but ensure it's maintained)
+    const visibleEvents = events.filter(e => e.is_visible).sort((a, b) => a.sort_order - b.sort_order);
+
+    // 1. Data Selection
+    const featuredEvent = visibleEvents.find(e => e.tag === "FEATURED") || visibleEvents[0];
+    const otherEvents = visibleEvents.filter(e => e !== featuredEvent);
+
+    // Use sort_order from database instead of year-based sorting
+    const sortedArchiveEvents = otherEvents;
 
     return (
         <main className="min-h-screen bg-background text-foreground pt-32 pb-20 overflow-hidden">
@@ -41,7 +71,7 @@ export default function EventsPage() {
                                 <Users className="text-primary w-7 h-7" />
                             </div>
                             <div>
-                                <span className="block text-3xl font-bold text-white">{eventStats.totalDelegates}</span>
+                                <span className="block text-3xl font-bold text-white">{stats?.total_delegates || eventStats.totalDelegates}</span>
                                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Delegates Impacted</span>
                             </div>
                         </div>
@@ -50,7 +80,7 @@ export default function EventsPage() {
                                 <Award className="text-emerald-400 w-7 h-7" />
                             </div>
                             <div>
-                                <span className="block text-3xl font-bold text-white">{eventStats.totalEvents}</span>
+                                <span className="block text-3xl font-bold text-white">{stats?.total_events || eventStats.totalEvents}</span>
                                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Flagship Conferences</span>
                             </div>
                         </div>
@@ -59,7 +89,7 @@ export default function EventsPage() {
                                 <Landmark className="text-blue-400 w-7 h-7" />
                             </div>
                             <div>
-                                <span className="block text-3xl font-bold text-white">{eventStats.yearsActive}</span>
+                                <span className="block text-3xl font-bold text-white">{stats?.years_active || eventStats.yearsActive}</span>
                                 <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Years of Excellence</span>
                             </div>
                         </div>
@@ -139,7 +169,7 @@ export default function EventsPage() {
                                     )}
                                     <div className="absolute top-4 left-4">
                                         <span className="px-3 py-1 bg-black/60 backdrop-blur-md rounded-lg text-[10px] font-black text-primary uppercase tracking-widest border border-white/10">
-                                            {event.division === "CTG" ? "Chattogram" : "HQ Global"}
+                                            {event.division === "CTG" ? "Chattogram" : "Dhaka"}
                                         </span>
                                     </div>
                                 </div>

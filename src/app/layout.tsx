@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://igac.org"),
+  metadataBase: new URL("https://igac.info"),
   title: "IGAC | International Global Affairs Council",
   description: "The biggest Model United Nations conference in South East Asia. Empowering the next generation of leaders.",
   keywords: ["IGAC", "MUN", "Model United Nations", "Diplomacy", "International Global Affairs Council", "Dhaka", "South East Asia"],
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "IGAC | International Global Affairs Council",
     description: "The biggest Model United Nations conference in South East Asia. Empowering the next generation of leaders.",
-    url: "https://igac.org",
+    url: "https://igac.info",
     siteName: "IGAC",
     images: [
       {
@@ -40,11 +40,8 @@ export const metadata: Metadata = {
   },
 };
 
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
+import { LayoutWrapper } from "@/components/layout/layout-wrapper";
 import { SpotlightEffect } from "@/components/motion/spotlight-effect";
-
-// ... existing code ...
 
 export default function RootLayout({
   children,
@@ -58,9 +55,9 @@ export default function RootLayout({
       >
         <SpotlightEffect className="min-h-screen flex flex-col">
           <SmoothScroll>
-            <Navbar />
-            {children}
-            <Footer />
+            <LayoutWrapper>
+              {children}
+            </LayoutWrapper>
           </SmoothScroll>
         </SpotlightEffect>
       </body>

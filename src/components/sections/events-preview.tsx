@@ -1,15 +1,26 @@
-import { eventsArchive, homeContent } from "@/config/site-data";
+import { getEvents } from "@/lib/data";
+import { homeContent } from "@/config/site-data";
 import { Reveal } from "@/components/motion/reveal";
 import Link from "next/link";
 import Image from "next/image";
 
-export function EventsPreview() {
-    const { label, title, description, ctaLabel, featuredIndices } = homeContent.eventsPreview;
+export async function EventsPreview() {
+    const { label, title, description, ctaLabel } = homeContent.eventsPreview;
 
-    // Show featured events or fallback to first 2
-    const previewEvents = featuredIndices
-        ? featuredIndices.map(idx => eventsArchive[idx]).filter(Boolean)
-        : eventsArchive.slice(0, 2);
+    // Fetch events from database, filter by featured flag
+    const allEvents = await getEvents();
+    let previewEvents = allEvents.filter(event => event.featured && event.is_visible);
+
+    // Sort by sort_order
+    previewEvents.sort((a, b) => a.sort_order - b.sort_order);
+
+    // Limit to 2 for homepage preview
+    previewEvents = previewEvents.slice(0, 2);
+
+    // Fallback: if no featured events, show the first 2 visible events
+    if (previewEvents.length === 0) {
+        previewEvents = allEvents.filter(e => e.is_visible).slice(0, 2);
+    }
 
     return (
         <section className="py-24 relative overflow-hidden">

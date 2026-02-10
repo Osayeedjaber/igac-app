@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { slugify } from "@/lib/utils";
+import { slugify, cn } from "@/lib/utils";
 import Link from "next/link";
 import { ExternalLink, Facebook, Instagram } from "lucide-react";
 
@@ -9,9 +9,9 @@ interface ProfileCardProps {
     name: string;
     role: string;
     image: string;
-    department?: string;
-    quote?: string;
-    socials?: {
+    department?: string | null;
+    quote?: string | null;
+    socials?: Record<string, string> | {
         facebook?: string;
         instagram?: string;
         linkedin?: string;
@@ -19,18 +19,20 @@ interface ProfileCardProps {
     };
     delay?: number;
     opacity?: number;
+    imageClassName?: string;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    [key: string]: unknown;
 }
 
-export function ProfileCard({ name, role, department, image, quote, socials, delay = 0, opacity = 1, onMouseEnter, onMouseLeave }: ProfileCardProps) {
+export function ProfileCard({ name, role, department, image, quote, socials, delay = 0, opacity = 1, imageClassName, onMouseEnter, onMouseLeave }: ProfileCardProps) {
     const cardRef = useRef<HTMLDivElement>(null);
     const x = useMotionValue(0);
     const y = useMotionValue(0);
 
     const mouseXSpring = useSpring(x);
     const mouseYSpring = useSpring(y);
-    const slug = slugify(name);
+    const slug = slugify(name || '');
 
     const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["5deg", "-5deg"]);
     const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-5deg", "5deg"]);
@@ -71,9 +73,11 @@ export function ProfileCard({ name, role, department, image, quote, socials, del
             className="group relative h-[650px] w-full rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 select-none hover:border-primary/50 transition-colors duration-500 bg-slate-900 cursor-pointer"
         >
             {/* Link wrapper for the whole card? Or just a button? Let's add a button top right */}
-            <Link href={`/team/${slug}`} className="absolute top-6 right-6 z-40 p-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-white/70 hover:text-primary hover:bg-black/60 transition-colors" title="View Profile">
-                 <ExternalLink size={20} />
-            </Link>
+            {slug && (
+                <Link href={`/team/${slug}`} className="absolute top-6 right-6 z-40 p-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-white/70 hover:text-primary hover:bg-black/60 transition-colors" title="View Profile">
+                     <ExternalLink size={20} />
+                </Link>
+            )}
 
             {/* Shimmer Effect */}
             <div className="absolute inset-0 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
@@ -83,10 +87,10 @@ export function ProfileCard({ name, role, department, image, quote, socials, del
             {/* Full Height Image */}
             <div className="absolute inset-0" style={{ transform: "translateZ(-20px)" }}>
                 <Image
-                    src={image}
-                    alt={name}
+                    src={image || "/logo.png"}
+                    alt={name || 'Team Member'}
                     fill
-                    className="object-cover object-top transition-transform duration-1000 group-hover:scale-110"
+                    className={cn("object-cover object-top transition-transform duration-1000 group-hover:scale-110", imageClassName)}
                     sizes="(max-width: 768px) 100vw, 33vw"
                     priority={delay < 0.2}
                 />
@@ -100,7 +104,7 @@ export function ProfileCard({ name, role, department, image, quote, socials, del
                 <div className="flex flex-col items-start text-left">
                     {/* Role Tag */}
                     <span className="text-primary text-[10px] font-black uppercase tracking-[0.4em] block mb-4 px-4 py-2 bg-black/60 backdrop-blur-xl rounded-full border border-primary/30">
-                        {role}
+                        {role || 'Team Member'}
                     </span>
 
                     {department && (
@@ -111,7 +115,7 @@ export function ProfileCard({ name, role, department, image, quote, socials, del
 
                     {/* Name - Sharp Serif */}
                     <h3 className="text-4xl font-serif font-black text-white leading-none mb-4 group-hover:text-primary transition-colors duration-500 [text-shadow:0_4px_12px_rgba(0,0,0,0.8)]">
-                        {name}
+                        {name || 'Team Member'}
                     </h3>
 
                     {/* Horizontal Divider */}

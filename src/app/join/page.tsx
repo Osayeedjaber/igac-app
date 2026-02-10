@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import JoinPage from "./JoinClient";
+import { getSiteSettings } from "@/lib/data";
 
 export const metadata: Metadata = {
     title: "Join Us | IGAC",
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Join Us | IGAC",
         description: "Become a part of the International Global Affairs Council and shape the future of diplomacy.",
-        url: "https://igac.org/join",
+        url: "https://igac.info/join",
         siteName: "IGAC",
         images: [
             {
@@ -28,6 +29,9 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <JoinPage />;
+export const revalidate = 60;
+
+export default async function Page() {
+    const settings = await getSiteSettings();
+    return <JoinPage recruitmentOpen={settings.recruitment_open} joinFormUrl={settings.join_form_url} />;
 }

@@ -10,14 +10,40 @@ import TextType from "@/components/TextType";
 import ScrollVelocity from "@/components/ScrollVelocity";
 
 export default function ContactPage() {
-    const [formStatus, setFormStatus] = useState<"idle" | "submitting" | "success">("idle");
+    const [formStatus, setFormStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+    const [formData, setFormData] = useState({
+        first_name: "",
+        last_name: "",
+        email: "",
+        subject: "",
+        message: "",
+    });
+    const [errorMsg, setErrorMsg] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setFormStatus("submitting");
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setFormStatus("success");
+        setErrorMsg("");
+
+        try {
+            const res = await fetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+
+            if (res.ok) {
+                setFormStatus("success");
+                setFormData({ first_name: "", last_name: "", email: "", subject: "", message: "" });
+            } else {
+                const data = await res.json();
+                setErrorMsg(data.error || "Failed to send message");
+                setFormStatus("error");
+            }
+        } catch {
+            setErrorMsg("Network error. Please try again.");
+            setFormStatus("error");
+        }
     };
     return (
         <main className="min-h-[100dvh] bg-background flex flex-col relative overflow-hidden selection:bg-primary/30">
@@ -141,30 +167,36 @@ export default function ContactPage() {
                                     <form onSubmit={handleSubmit} className="space-y-6">
                                         <h3 className="text-2xl font-serif font-bold text-foreground mb-8">Send a Message</h3>
                                         
+                                        {formStatus === "error" && errorMsg && (
+                                            <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                                                {errorMsg}
+                                            </div>
+                                        )}
+                                        
                                         <div className="grid grid-cols-2 gap-6">
                                             <div className="space-y-2 group">
                                                 <label className="text-xs uppercase tracking-wider font-bold text-muted-foreground group-focus-within:text-primary transition-colors">First Name</label>
-                                                <input required type="text" className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05]" placeholder="John" />
+                                                <input required type="text" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05]" placeholder="John" />
                                             </div>
                                             <div className="space-y-2 group">
                                                 <label className="text-xs uppercase tracking-wider font-bold text-muted-foreground group-focus-within:text-primary transition-colors">Last Name</label>
-                                                <input required type="text" className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05]" placeholder="Doe" />
+                                                <input required type="text" value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05]" placeholder="Doe" />
                                             </div>
                                         </div>
                                         
                                         <div className="space-y-2 group">
                                             <label className="text-xs uppercase tracking-wider font-bold text-muted-foreground group-focus-within:text-primary transition-colors">Email Address</label>
-                                            <input required type="email" className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05]" placeholder="john@example.com" />
+                                            <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05]" placeholder="john@example.com" />
                                         </div>
                                         
                                         <div className="space-y-2 group">
                                             <label className="text-xs uppercase tracking-wider font-bold text-muted-foreground group-focus-within:text-primary transition-colors">Subject</label>
-                                            <input required type="text" className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05]" placeholder="General Inquiry" />
+                                            <input required type="text" value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05]" placeholder="General Inquiry" />
                                         </div>
                                         
                                         <div className="space-y-2 group">
                                             <label className="text-xs uppercase tracking-wider font-bold text-muted-foreground group-focus-within:text-primary transition-colors">Message</label>
-                                            <textarea required rows={5} className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05] resize-none" placeholder="How can we help you today?" />
+                                            <textarea required rows={5} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-4 text-foreground focus:border-primary/50 outline-none transition-all focus:bg-white/[0.05] resize-none" placeholder="How can we help you today?" />
                                         </div>
                                         
                                         <button
@@ -173,7 +205,7 @@ export default function ContactPage() {
                                             className="w-full bg-primary text-primary-foreground font-bold uppercase tracking-widest py-5 rounded-lg hover:bg-white hover:text-black transition-all duration-500 shadow-[0_0_20px_rgba(212,175,55,0.2)] disabled:opacity-70 disabled:cursor-not-allowed group relative overflow-hidden flex items-center justify-center gap-3"
                                         >
                                             <span className="relative z-10">{formStatus === "submitting" ? "Sending..." : "Send Message"}</span>
-                                            {!formStatus && <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform" />}
+                                            {formStatus !== "submitting" && <ArrowRight size={18} className="relative z-10 group-hover:translate-x-1 transition-transform" />}
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                         </button>
                                     </form>

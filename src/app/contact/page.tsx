@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "Contact Us | IGAC",
         description: "Get in touch with the International Global Affairs Council. We are here to help.",
-        url: "https://igac.org/contact",
+        url: "https://igac.info/contact",
         siteName: "IGAC",
         images: [
             {

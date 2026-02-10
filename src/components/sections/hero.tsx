@@ -37,7 +37,7 @@ export function Hero() {
                 </div>
 
                 <div className="flex flex-col items-center w-full max-w-[95vw] mx-auto text-center">
-                    <h1 className="w-full whitespace-nowrap text-[3.5vw] md:text-5xl lg:text-6xl xl:text-7xl font-bold font-serif mb-6 tracking-tight drop-shadow-xl leading-none text-center">
+                    <h1 className="w-full text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold font-serif mb-6 tracking-tight drop-shadow-xl leading-none text-center md:whitespace-nowrap">
                         <ShinyText
                             text="International Global Affairs Council"
                             disabled={false}

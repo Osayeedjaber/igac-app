@@ -1,11 +1,18 @@
 "use client";
 
-import { teamData } from "@/config/site-data";
 import { ProfileCard } from "@/components/ui/profile-card";
 import { Reveal } from "@/components/motion/reveal";
 import { useState } from "react";
 
-export function GoverningBodyHome() {
+type Member = {
+    name: string;
+    role: string;
+    image: string;
+    quote?: string;
+    socials: Record<string, string>;
+};
+
+export function GoverningBodyHome({ members }: { members: Member[] }) {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
     return (
@@ -21,7 +28,7 @@ export function GoverningBodyHome() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto px-6">
-                {teamData.governingBody.slice(0, 3).map((member, i) => (
+                {members.slice(0, 3).map((member, i) => (
                     <ProfileCard
                         key={i}
                         {...member}

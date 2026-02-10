@@ -2,6 +2,7 @@ import { Hero } from "@/components/sections/hero";
 import { About } from "@/components/sections/about";
 import { Community } from "@/components/sections/community";
 import { PresidentMessage } from "@/components/sections/president-message";
+import { GSMessage } from "@/components/sections/gs-message";
 import { InfiniteCarousel } from "@/components/motion/infinite-carousel";
 import { Reveal } from "@/components/motion/reveal";
 import { GoverningBodyHome } from "@/components/sections/governing-body-home";
@@ -10,10 +11,11 @@ import { Impact } from "@/components/sections/impact";
 import { EventsPreview } from "@/components/sections/events-preview";
 import ScrollVelocity from "@/components/ScrollVelocity";
 import Link from "next/link";
-import { ArrowRight, Award, Globe, MessageSquare, Users } from "lucide-react";
+import { Award, Globe, MessageSquare, Users } from "lucide-react";
 import { Meteors } from "@/components/ui/meteors";
 import { Button } from "@/components/ui/button-premium";
 import { Metadata } from "next";
+import { getTeamMembers, getSiteStats } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "IGAC | International Global Affairs Council",
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "IGAC | International Global Affairs Council",
     description: "The biggest Model United Nations conference in South East Asia. Join us in shaping tomorrow's leaders.",
-    url: "https://igac.org",
+    url: "https://igac.info",
     siteName: "IGAC",
     images: [
       {
@@ -65,14 +67,59 @@ const whyJoinReasons = [
   }
 ];
 
-export default function Home() {
+export const revalidate = 60;
+
+export default async function Home() {
+  const [teamData, siteStats] = await Promise.all([
+    getTeamMembers(),
+    getSiteStats(),
+  ]);
+
+  // Serialize for client components
+  const governingBody = teamData.governingBody.map(m => ({
+    name: m.name,
+    role: m.role,
+    image: m.image,
+    quote: m.quote || "",
+    socials: m.socials,
+  }));
+
+  const corePanel = teamData.corePanel.map(m => ({
+    name: m.name,
+    role: m.role,
+    image: m.image,
+    socials: m.socials,
+  }));
+
+  // Hardcoded president for homepage
+  const president = {
+    name: "Al Rashidus Sabru Farabi",
+    role: "President",
+    image: "/governing-panel/president.jpg",
+    quote: "A crucible where young minds grapple with pressing challenges.",
+    socials: {
+      facebook: "https://www.facebook.com/Al.Rashidus.Sabru.Farabi",
+      instagram: "https://www.instagram.com/far.abi_/"
+    }
+  };
+  const gs = corePanel.find(m => m.role.toLowerCase().includes("general secretary")) || corePanel[0];
+
+  // CTG head for regional presence section
+  const ctgHead = teamData.ctgHead ? {
+    name: teamData.ctgHead.name,
+    role: teamData.ctgHead.role,
+    image: teamData.ctgHead.image,
+    socials: teamData.ctgHead.socials,
+  } : undefined;
+
   return (
     <main className="flex flex-col">
       <Hero />
       <About />
       <Community />
-      <PresidentMessage />
-      <GoverningBodyHome />
+      <PresidentMessage president={president} />
+      <GSMessage gs={gs} />
+      <GoverningBodyHome members={governingBody} />
       {/* Core Panel Preview */}
       <section className="py-24 overflow-hidden border-t border-white/5 relative">
         <div className="container mx-auto px-6 mb-16 text-center flex flex-col items-center">
@@ -82,12 +129,12 @@ export default function Home() {
             <p className="text-xl text-muted-foreground/80 max-w-2xl mx-auto">The dedicated team driving our mission forward.</p>
           </Reveal>
         </div>
-        <InfiniteCarousel />
+        <InfiniteCarousel members={corePanel} />
       </section>
 
-      <RegionalPresence />
+      <RegionalPresence ctgHead={ctgHead} />
 
-      <Impact />
+      <Impact stats={siteStats} />
 
       {/* Why Join IGAC */}
       <section className="py-24 border-y border-white/5">

@@ -53,53 +53,31 @@
 }
 
 :root {
-  /* IGAC Theme - Forced Dark Green & Gold */
-
-  /* Background: #051b11 (Deep Green) */
+  /* IGAC Theme — Deep Green & Gold */
   --background: #051b11;
-  /* Foreground: White/Off-white */
   --foreground: #f8fafc;
-
-  /* Primary: #d4af37 (Gold) */
   --primary: #d4af37;
-  /* Primary FG: Deep Green */
   --primary-foreground: #051b11;
-
-  /* Secondary: Slightly lighter green for contrast */
   --secondary: #0a2e1d;
   --secondary-foreground: #f8fafc;
-
-  /* Muted: Lighter green with transparency or dullness */
   --muted: #0f3d2a;
   --muted-foreground: #94a3b8;
-
-  /* Accent: For hover states, a rich green */
   --accent: #0f3d2a;
   --accent-foreground: #d4af37;
-
-  /* Borders & Inputs */
   --border: #1e453e;
   --input: #1e453e;
   --ring: #d4af37;
-
   --card: #082216;
-  /* Slightly lighter than bg */
   --card-foreground: #f8fafc;
-
   --popover: #051b11;
   --popover-foreground: #f8fafc;
-
   --destructive: oklch(0.577 0.245 27.325);
-
   --radius: 0.625rem;
-
-  /* Charts - kept as oklch or hex */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-
   --sidebar: #051b11;
   --sidebar-foreground: #f8fafc;
   --sidebar-primary: #d4af37;
@@ -131,16 +109,19 @@
   --popover-foreground: #f8fafc;
 }
 
+/* === Global Base Styles === */
 html,
 body {
   background-color: #051b11 !important;
-  /* Fallback and forced */
   color: var(--foreground);
   font-family: var(--font-body);
   position: relative;
   overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Subtle noise texture overlay */
 body::before {
   content: "";
   position: fixed;
@@ -150,65 +131,105 @@ body::before {
   height: 100%;
   pointer-events: none;
   z-index: 50;
-  opacity: 0.03;
+  opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
+/* === Consistent Selection === */
+::selection {
+  background-color: rgba(212, 175, 55, 0.3);
+  color: #f8fafc;
+}
+
+/* === Scrollbar Styling (Webkit) === */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #051b11;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e453e;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* === Focus Styles for Accessibility === */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* === Smooth Transitions on all interactive elements === */
+a, button, input, textarea, select {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === Utility Animations === */
 @layer utilities {
   @keyframes infinite-scroll {
-    from {
-      transform: translateX(0);
-    }
-
-    to {
-      transform: translateX(-50%);
-    }
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
   }
-
   .animate-infinite-scroll {
     animation: infinite-scroll 40s linear infinite;
   }
 
   @keyframes shine {
-    0% {
-      transform: translateX(-100%) rotate(45deg);
-    }
-
-    100% {
-      transform: translateX(200%) rotate(45deg);
-    }
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(200%) rotate(45deg); }
   }
-
   .animate-shine {
     animation: shine 3s ease-in-out infinite;
   }
 
   @keyframes shimmer {
-    from {
-      background-position: 0 0;
-    }
-
-    to {
-      background-position: -200% 0;
-    }
+    from { background-position: 0 0; }
+    to { background-position: -200% 0; }
   }
-
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
   .animate-shimmer {
     animation: shimmer 2s linear infinite;
   }
 
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
   .animate-spin-slow {
     animation: spin 3s linear infinite;
+  }
+  .animate-spin-slow-reverse {
+    animation: spin 6s linear infinite reverse;
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* Page transition fade */
+  @keyframes page-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-page-enter {
+    animation: page-enter 0.5s ease-out;
   }
 }
 
@@ -216,8 +237,8 @@ body::before {
   animation-play-state: paused;
 }
 
+/* === Typography Normalization === */
 @layer base {
-
   /* Force Sans-Serif on Navigation to prevent persistent Serif styling */
   header,
   nav,
@@ -227,10 +248,18 @@ body::before {
   }
 
   /* Restore Serif for display headings */
-  h1,
-  h2,
-  h3,
-  .font-serif {
+  h1, h2, h3, .font-serif {
     font-family: var(--font-playfair), ui-serif, Georgia, serif;
+  }
+
+  /* Fix inconsistent paragraph spacing */
+  p {
+    line-height: 1.7;
+  }
+
+  /* Prevent images from overflowing */
+  img {
+    max-width: 100%;
+    height: auto;
   }
 }

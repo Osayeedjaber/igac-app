@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import TeamPage from "./TeamClient";
+import { getTeamMembers } from "@/lib/data";
 
 export const metadata: Metadata = {
     title: "The Team | IGAC Leadership",
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: "The Team | IGAC Leadership",
         description: "Meet the dedicated team behind IGAC.",
-        url: "https://igac.org/team",
+        url: "https://igac.info/team",
         siteName: "IGAC",
         images: [
             {
@@ -28,6 +29,9 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <TeamPage />;
+export const revalidate = 60; // Revalidate every 60 seconds
+
+export default async function Page() {
+    const teamData = await getTeamMembers();
+    return <TeamPage data={teamData} />;
 }

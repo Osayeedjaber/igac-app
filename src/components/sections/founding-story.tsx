@@ -6,8 +6,16 @@ import Image from "next/image";
 
 import { ProfileCard } from "@/components/ui/profile-card";
 
-export function FoundingStory() {
-    const president = teamData.governingBody[0];
+type MemberProp = {
+    name: string;
+    role: string;
+    image: string;
+    quote?: string;
+    socials: Record<string, string>;
+};
+
+export function FoundingStory({ president: presidentProp }: { president?: MemberProp }) {
+    const president = presidentProp || teamData.governingBody[0];
 
     return (
         <section className="py-24 relative overflow-hidden">

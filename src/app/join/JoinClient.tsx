@@ -6,11 +6,15 @@ import { Reveal } from "@/components/motion/reveal";
 import { TextHoverEffect } from "@/components/ui/text-hover-effect";
 import { Button } from "@/components/ui/button-premium";
 import { Meteors } from "@/components/ui/meteors";
-import { CheckCircle2, CreditCard, FileText, Send, Sparkles, UserPlus, Globe, Award, Users, BookOpen, Anchor, Ship, Shield, Waves } from "lucide-react";
-import Link from "next/link";
+import { CheckCircle2, CreditCard, FileText, Send, Sparkles, UserPlus, Globe, Award, Users, BookOpen, Anchor, Ship, Shield, Waves, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function JoinPage() {
+interface JoinPageProps {
+    recruitmentOpen: boolean;
+    joinFormUrl: string;
+}
+
+export default function JoinPage({ recruitmentOpen, joinFormUrl }: JoinPageProps) {
     return (
         <main className="min-h-screen bg-background relative selection:bg-primary selection:text-background overflow-hidden">
             {/* Cinematic Background Elements */}
@@ -21,12 +25,12 @@ export default function JoinPage() {
             </div>
 
             {/* 1. HERO SECTION - Cinematic */}
-            <section className="relative h-[80vh] flex flex-col items-center justify-center px-6 pt-24 pb-20">
+            <section className="relative min-h-[60vh] md:h-[80vh] flex flex-col items-center justify-center px-6 pt-24 pb-20">
                 <div className="relative w-full max-w-[1400px] h-64 md:h-80 mx-auto">
                     <TextHoverEffect text="JOIN US" />
                 </div>
 
-                <Reveal width="100%" delay={0.5} className="flex flex-col items-center text-center mt-[-40px] z-10">
+                <Reveal width="100%" delay={0.5} className="flex flex-col items-center text-center mt-[-40px] z-10" overflowVisible>
                     <span className="text-primary text-[10px] font-black uppercase tracking-[1em] mb-8 block animate-pulse">
                         Engineers of Diplomacy
                     </span>
@@ -40,20 +44,32 @@ export default function JoinPage() {
                     </p>
 
                     <div className="flex flex-col items-center gap-6">
-                        <Link href="#application-form">
-                            <Button size="lg" variant="primary" withArrow className="h-16 px-12 text-base shadow-[0_0_50px_rgba(212,175,55,0.2)] hover:shadow-[0_0_70px_rgba(212,175,55,0.4)] hover:scale-105 transition-all duration-300">
-                                Launch Application
-                            </Button>
-                        </Link>
+                        {recruitmentOpen ? (
+                            <a href="https://forms.gle/vTMVqN637Q5QGmXcA" target="_blank" rel="noopener noreferrer">
+                                <Button size="lg" variant="primary" withArrow className="h-16 px-12 text-base shadow-[0_0_50px_rgba(212,175,55,0.2)] hover:shadow-[0_0_70px_rgba(212,175,55,0.4)] hover:scale-105 transition-all duration-300">
+                                    Launch Application
+                                </Button>
+                            </a>
+                        ) : (
+                            <div className="flex flex-col items-center gap-4">
+                                <Button size="lg" variant="primary" disabled className="h-16 px-12 text-base opacity-50 cursor-not-allowed">
+                                    Recruitment Closed
+                                </Button>
+                                <div className="flex items-center gap-2 px-6 py-3 bg-red-500/10 border border-red-500/20 rounded-full">
+                                    <XCircle className="w-4 h-4 text-red-400" />
+                                    <span className="text-sm text-red-300 font-medium">Recruitment is currently closed. Check back later.</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </Reveal>
             </section>
 
             {/* 2. BENEFITS - Governing Body Style */}
-            <section className="py-48 relative z-10">
+            <section className="py-24 md:py-48 relative z-10">
                 <div className="container mx-auto px-6">
-                    <Reveal width="100%" className="mb-24 flex flex-col items-center text-center">
-                        <h2 className="text-5xl md:text-8xl font-serif font-black text-white mb-4 tracking-tighter">
+                    <Reveal width="100%" className="mb-12 md:mb-24 flex flex-col items-center text-center">
+                        <h2 className="text-4xl md:text-8xl font-serif font-black text-white mb-4 tracking-tighter">
                             Why Join <span className="text-primary italic">IGAC?</span>
                         </h2>
                         <div className="w-24 h-1 bg-gradient-to-r from-transparent via-primary to-transparent mt-6" />
@@ -95,8 +111,8 @@ export default function JoinPage() {
             </section>
 
             {/* 3. THE PROCESS - Core Panel Style Cinematic Container */}
-            <section className="w-full max-w-[1800px] mx-auto px-6 mb-64 relative z-10">
-                <div className="bg-[#020d08] border border-emerald-900/40 rounded-[5rem] p-12 md:p-32 overflow-hidden relative shadow-[0_40px_100px_rgba(0,0,0,0.8)]">
+            <section className="w-full max-w-[1800px] mx-auto px-4 md:px-6 mb-32 md:mb-64 relative z-10">
+                <div className="bg-[#020d08] border border-emerald-900/40 rounded-3xl md:rounded-[5rem] p-6 md:p-32 overflow-hidden relative shadow-[0_40px_100px_rgba(0,0,0,0.8)]">
                     {/* Maritime Watermarks */}
                     <div className="absolute inset-0 pointer-events-none opacity-[0.03]">
                         <Anchor className="absolute top-10 left-10 w-[400px] h-[400px] -rotate-12" />
@@ -109,7 +125,7 @@ export default function JoinPage() {
                             <Sparkles className="w-4 h-4 text-primary" />
                             <span className="text-primary text-[10px] font-black uppercase tracking-[0.3em]">Merit-Based Selection</span>
                         </div>
-                        <h2 className="text-6xl md:text-9xl font-serif font-black text-white text-center leading-none tracking-tighter mb-12">
+                        <h2 className="text-4xl md:text-9xl font-serif font-black text-white text-center leading-none tracking-tighter mb-8 md:mb-12">
                             How It <span className="text-primary italic">Works.</span>
                         </h2>
                         <p className="text-xl md:text-2xl text-muted-foreground/80 max-w-2xl mx-auto font-serif italic">
@@ -150,9 +166,9 @@ export default function JoinPage() {
                     <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
                     <Reveal className="max-w-6xl mx-auto pt-10" overflowVisible>
-                        <div className="relative bg-[#022c22]/40 backdrop-blur-3xl border border-emerald-500/20 rounded-[4rem] p-10 md:p-20 text-center shadow-[0_50px_100px_rgba(0,0,0,0.6)] group">
+                        <div className="relative bg-[#022c22]/40 backdrop-blur-3xl border border-emerald-500/20 rounded-3xl md:rounded-[4rem] p-6 md:p-20 text-center shadow-[0_50px_100px_rgba(0,0,0,0.6)] group">
                             {/* Decorative Grid */}
-                            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.05] z-0 rounded-[4rem] overflow-hidden" />
+                            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.05] z-0 rounded-3xl md:rounded-[4rem] overflow-hidden" />
 
                             <div className="relative z-10">
                                 <Reveal width="100%" className="mb-6" overflowVisible>
@@ -174,7 +190,7 @@ export default function JoinPage() {
                                     </div>
                                 </Reveal>
 
-                                <h2 className="text-5xl md:text-8xl font-serif font-black text-white mb-8 tracking-tighter leading-none">
+                                <h2 className="text-4xl md:text-8xl font-serif font-black text-white mb-6 md:mb-8 tracking-tighter leading-none">
                                     Join the <span className="text-primary italic">Legacy.</span>
                                 </h2>
 
@@ -183,11 +199,23 @@ export default function JoinPage() {
                                 </p>
 
                                 <div className="flex flex-col items-center gap-8">
-                                    <Link href="https://forms.gle/membership-form-placeholder" target="_blank" rel="noopener noreferrer">
-                                        <Button size="lg" variant="primary" withArrow className="h-20 px-12 text-lg rounded-full shadow-[0_0_50px_rgba(212,175,55,0.3)] hover:scale-105 transition-all duration-300">
-                                            Apply for Membership
-                                        </Button>
-                                    </Link>
+                                    {recruitmentOpen ? (
+                                        <a href={joinFormUrl || "#"} target="_blank" rel="noopener noreferrer">
+                                            <Button size="lg" variant="primary" withArrow className="h-20 px-12 text-lg rounded-full shadow-[0_0_50px_rgba(212,175,55,0.3)] hover:scale-105 transition-all duration-300">
+                                                Apply for Membership
+                                            </Button>
+                                        </a>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-4">
+                                            <Button size="lg" variant="primary" disabled className="h-20 px-12 text-lg rounded-full opacity-50 cursor-not-allowed">
+                                                Applications Closed
+                                            </Button>
+                                            <div className="flex items-center gap-2 px-6 py-3 bg-red-500/10 border border-red-500/20 rounded-full">
+                                                <XCircle className="w-4 h-4 text-red-400" />
+                                                <span className="text-sm text-red-300 font-medium">Recruitment is currently closed</span>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="flex items-center gap-4 px-8 py-3 bg-black/60 backdrop-blur-xl rounded-full border border-primary/20">
                                         <CreditCard className="w-5 h-5 text-primary" />
@@ -264,7 +292,7 @@ function ProcessCard({ number, title, description, icon: Icon, delay, isLast }: 
                     rotateY,
                     transformStyle: "preserve-3d",
                 }}
-                className="group relative h-full bg-[#051b11]/20 border border-emerald-900/40 rounded-[2.5rem] p-10 transition-all duration-500 hover:border-primary/50 hover:bg-[#051b11]/40 overflow-hidden cursor-default shadow-2xl"
+                className="group relative h-full bg-[#051b11]/20 border border-emerald-900/40 rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 transition-all duration-500 hover:border-primary/50 hover:bg-[#051b11]/40 overflow-hidden cursor-default shadow-2xl"
             >
                 {/* Shimmer Effect */}
                 <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">

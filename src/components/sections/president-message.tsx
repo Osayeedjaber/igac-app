@@ -5,13 +5,20 @@ import Image from "next/image";
 import { teamData } from "@/config/site-data";
 import { Reveal } from "@/components/motion/reveal";
 import { Quote } from "lucide-react";
-import { useRef, useState, useEffect } from "react";
+import { useRef } from "react";
 
-export function PresidentMessage() {
-    const { presidentMessage, governingBody } = teamData;
-    const president = governingBody.find(m => m.role === "President") || governingBody[0];
+type MemberProp = {
+    name: string;
+    role: string;
+    image: string;
+};
+
+export function PresidentMessage({ president }: { president?: MemberProp }) {
+    const { presidentMessage } = teamData;
+    // Use Supabase data if provided, otherwise fall back to static
+    const fallback = teamData.governingBody.find(m => m.role.toLowerCase().includes("president") && !m.role.toLowerCase().includes("chairman")) || teamData.governingBody[0];
+    const member = president || fallback;
     const containerRef = useRef<HTMLElement>(null);
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
     const { scrollYProgress } = useScroll({
         target: containerRef,
@@ -20,13 +27,11 @@ export function PresidentMessage() {
 
     const imgY = useTransform(scrollYProgress, [0, 1], [-100, 100]);
     const textY = useTransform(scrollYProgress, [0, 1], [50, -50]);
-    const logoRotation = 0; // Keeping it straight as requested
 
     return (
         <section ref={containerRef} className="py-24 md:py-40 relative overflow-hidden group">
 
-
-            {/* Background Logo Watermark - Straight and subtle */}
+            {/* Background Logo Watermark */}
             <motion.div
                 style={{ opacity: 0.05 }}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none z-0"
@@ -47,13 +52,13 @@ export function PresidentMessage() {
                             <Reveal delay={0.2} width="100%">
                                 <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden border border-white/10 group">
                                     <Image
-                                        src={president.image}
-                                        alt={president.name}
+                                        src={member.image}
+                                        alt={member.name}
                                         fill
                                         className="object-cover object-top transition-transform duration-1000 group-hover:scale-110"
                                         priority
                                     />
-                                    {/* Glassmorphism card attached to image - Moved inside frame */}
+                                    {/* Glassmorphism card */}
                                     <div className="absolute bottom-10 right-8 bg-black/60 backdrop-blur-xl border border-primary/30 p-8 rounded-2xl shadow-2xl hidden lg:block max-w-[280px] z-20">
                                         <Quote className="w-10 h-10 text-primary mb-4 opacity-80" />
                                         <p className="text-white text-lg font-serif italic leading-relaxed text-left">
@@ -66,7 +71,7 @@ export function PresidentMessage() {
                         </motion.div>
                     </div>
 
-                    {/* Content Column with layered reveal */}
+                    {/* Content Column */}
                     <div className="w-full lg:w-[55%] flex flex-col items-center lg:items-start text-center lg:text-left">
                         <motion.div style={{ y: textY }}>
                             <Reveal delay={0.3}>
@@ -79,7 +84,7 @@ export function PresidentMessage() {
                             </Reveal>
 
                             <Reveal delay={0.4}>
-                                <h2 className="text-5xl md:text-7xl font-serif font-bold text-white mb-10 leading-[1.1] tracking-tight text-left">
+                                <h2 className="text-4xl md:text-7xl font-serif font-bold text-white mb-10 leading-[1.1] tracking-tight text-left">
                                     A Vision for <span className="text-primary">Global</span> Excellence<span className="text-primary">.</span>
                                 </h2>
                             </Reveal>

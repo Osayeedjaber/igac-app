@@ -1,21 +1,48 @@
 "use client";
 
-import { teamData } from "@/config/site-data";
 import { ProfileCard } from "@/components/ui/profile-card";
 import { Reveal } from "@/components/motion/reveal";
 import { TextHoverEffect } from "@/components/ui/text-hover-effect";
 import { Anchor, Ship, Waves, MousePointer2, Shield, Zap, Award, Target } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function TeamPage() {
-    const ctgData = teamData.regions.ctg;
+type MemberData = {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  department: string;
+  quote: string;
+  description: string;
+  category: string;
+  sort_order: number;
+  is_visible: boolean;
+  socials: Record<string, string>;
+};
 
+interface TeamPageProps {
+  data: {
+    governingBody: MemberData[];
+    corePanel: MemberData[];
+    heads: MemberData[];
+    deputies: MemberData[];
+    executives: MemberData[];
+    ctgHead: MemberData | null;
+    ctgCore: MemberData[];
+    ctgHeads: MemberData[];
+    ctgDeputies: MemberData[];
+  };
+}
+
+export default function TeamPage({ data }: TeamPageProps) {
     // Group Core Panel by role for the tiered showcase
     const coreTiers = {
-        gs: teamData.corePanel.filter(m => m.role === "General Secretary"),
-        ags: teamData.corePanel.filter(m => m.role === "Add. General Secretary"),
-        js: teamData.corePanel.filter(m => m.role === "Joint Secretary"),
-        os: teamData.corePanel.filter(m => m.role === "Organizing Secretary")
+        president: data.corePanel.filter(m => m.role === "President"),
+        gs: data.corePanel.filter(m => m.role === "General Secretary"),
+        ags: data.corePanel.filter(m => m.role === "Add. General Secretary"),
+        js: data.corePanel.filter(m => m.role === "Joint Secretary"),
+        ajs: data.corePanel.filter(m => m.role === "Ad. Joint Secretary"),
+        os: data.corePanel.filter(m => m.role === "Organizing Secretary")
     };
 
     return (
@@ -53,9 +80,9 @@ export default function TeamPage() {
                     <div className="w-48 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent mx-auto mt-6" />
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-12 max-w-[1400px] mx-auto">
-                    {teamData.governingBody.map((member, i) => (
-                        <div key={i} className="group relative">
+                <div className={`grid gap-12 max-w-[1400px] mx-auto ${data.governingBody.length <= 2 ? 'md:grid-cols-2 justify-items-center max-w-[900px]' : 'md:grid-cols-3'}`}>
+                    {data.governingBody.map((member, i) => (
+                        <div key={member.id} className="group relative w-full">
                             <ProfileCard {...member} delay={0.2 + i * 0.15} />
                         </div>
                     ))}
@@ -75,34 +102,58 @@ export default function TeamPage() {
                         </h2>
                     </Reveal>
 
+                    {/* President */}
+                    {coreTiers.president.length > 0 && (
+                        <div className="flex justify-center mb-32">
+                            <div className="w-full max-w-xl text-center">
+                                <ProfileCard {...coreTiers.president[0]} />
+                            </div>
+                        </div>
+                    )}
+
                     {/* General Secretary */}
+                    {coreTiers.gs.length > 0 && (
                     <div className="flex justify-center mb-32">
                         <div className="w-full max-w-xl text-center">
                             <ProfileCard {...coreTiers.gs[0]} />
                         </div>
                     </div>
+                    )}
+
+                    {/* Joint Secretaries */}
+                    <div className="mb-32">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-[1400px] mx-auto">
+                            {coreTiers.js.map((member, i) => (
+                                <ProfileCard key={member.id} {...member} delay={i * 0.15} />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Ad. Joint Secretary */}
+                    {coreTiers.ajs.length > 0 && (
+                    <div className="flex justify-center mb-32">
+                        <div className="w-full max-w-lg text-center">
+                            {coreTiers.ajs.map((member, i) => (
+                                <ProfileCard key={member.id} {...member} delay={i * 0.15} />
+                            ))}
+                        </div>
+                    </div>
+                    )}
 
                     {/* Add. General Secretary */}
+                    {coreTiers.ags.length > 0 && (
                     <div className="flex justify-center mb-32">
                         <div className="w-full max-w-lg text-center">
                             <ProfileCard {...coreTiers.ags[0]} />
                         </div>
                     </div>
-
-                    {/* Joint Secretaries */}
-                    <div className="mb-32">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-[1400px] mx-auto">
-                            {coreTiers.js.map((member: any, i: number) => (
-                                <ProfileCard key={i} {...member} delay={i * 0.15} />
-                            ))}
-                        </div>
-                    </div>
+                    )}
 
                     {/* Organizing Secretaries */}
                     <div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 max-w-[1400px] mx-auto">
-                            {coreTiers.os.map((member: any, i: number) => (
-                                <ProfileCard key={i} {...member} delay={i * 0.1} />
+                            {coreTiers.os.map((member, i) => (
+                                <ProfileCard key={member.id} {...member} delay={i * 0.1} />
                             ))}
                         </div>
                     </div>
@@ -118,8 +169,8 @@ export default function TeamPage() {
                     <div className="w-16 h-1 bg-primary/20 mt-10 rounded-full" />
                 </Reveal>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-[1400px] mx-auto">
-                    {teamData.heads.map((member: any, i: number) => (
-                        <ProfileCard key={i} {...member} image={member.image || "/logo.png"} delay={i * 0.1} />
+                    {data.heads.map((member, i) => (
+                        <ProfileCard key={member.id} {...member} image={member.image || "/logo.png"} delay={i * 0.1} />
                     ))}
                 </div>
             </section>
@@ -134,15 +185,34 @@ export default function TeamPage() {
                     </div>
                 </Reveal>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-[1400px] mx-auto">
-                    {teamData.deputies.map((member: any, i: number) => (
-                        <ProfileCard key={i} {...member} image={member.image || "/logo.png"} delay={i * 0.05} />
+                    {data.deputies.map((member, i) => (
+                        <ProfileCard key={member.id} {...member} image={member.image || "/logo.png"} delay={i * 0.05} />
                     ))}
                 </div>
             </section>
 
+            {/* 8. Executives (Main) */}
+            {data.executives && data.executives.length > 0 && (
+                <section className="w-full max-w-[1600px] mx-auto px-6 mb-48 relative z-10 text-center">
+                    <Reveal width="100%" className="mb-20 flex flex-col items-center">
+                        <Target className="w-8 h-8 text-primary/50 mb-6" />
+                        <span className="text-primary text-[10px] font-black uppercase tracking-[0.5em] mb-4 text-center">Operational Excellence</span>
+                        <div className="mb-20">
+                            <h2 className="text-5xl md:text-8xl font-serif font-black text-white text-center tracking-tighter mx-auto w-full">The <span className="text-primary italic">Executives.</span></h2>
+                        </div>
+                    </Reveal>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-[1400px] mx-auto">
+                        {data.executives.map((member, i) => (
+                            <ProfileCard key={member.id} {...member} image={member.image || "/logo.png"} delay={i * 0.05} />
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {/* REGIONAL HUB START */}
 
             {/* 3. Regional Head (Chattogram) - Emerald/Teal Theme */}
+            {data.ctgHead && (
             <section className="relative py-48 mb-48 overflow-hidden bg-[#022c22]/50 border-y border-emerald-500/20 backdrop-blur-3xl group/ctg">
                 {/* Aggressive Maritime Watermarks */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -179,7 +249,7 @@ export default function TeamPage() {
                                 <div className="max-w-md relative group">
                                     <div className="absolute -inset-10 bg-emerald-500/20 blur-[100px] rounded-full group-hover:bg-cyan-500/30 transition-all duration-1000" />
                                     <div className="relative border-4 border-emerald-500/30 rounded-[2.5rem] p-2 bg-emerald-950/20 backdrop-blur-md">
-                                        <ProfileCard {...ctgData.head} />
+                                        <ProfileCard {...data.ctgHead} />
                                     </div>
                                 </div>
                             </Reveal>
@@ -187,9 +257,10 @@ export default function TeamPage() {
                     </div>
                 </div>
             </section>
+            )}
 
             {/* 5. CTG Core Panel */}
-            {ctgData.corePanel && ctgData.corePanel.length > 0 && (
+            {data.ctgCore.length > 0 && (
                 <section className="w-full max-w-[1600px] mx-auto px-6 mb-48 relative z-10 text-center">
                     <Reveal width="100%" className="mb-20 flex flex-col items-center">
                         <span className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.5em] mb-4 text-center">Regional Hub</span>
@@ -198,15 +269,15 @@ export default function TeamPage() {
                         </div>
                     </Reveal>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-[1400px] mx-auto">
-                        {ctgData.corePanel.map((member: any, i: number) => (
-                            <ProfileCard key={i} {...member} delay={i * 0.05} />
+                        {data.ctgCore.map((member, i) => (
+                            <ProfileCard key={member.id} {...member} delay={i * 0.05} />
                         ))}
                     </div>
                 </section>
             )}
 
             {/* 8. CTG Regional Sections */}
-            {ctgData.heads && ctgData.heads.length > 0 && (
+            {data.ctgHeads.length > 0 && (
                 <section className="w-full max-w-[1600px] mx-auto px-6 mb-48 relative z-10 text-center">
                     <Reveal width="100%" className="mb-20 flex flex-col items-center">
                         <span className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.5em] mb-4 text-center">Chattogram Execution</span>
@@ -215,14 +286,14 @@ export default function TeamPage() {
                         </div>
                     </Reveal>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-[1400px] mx-auto">
-                        {ctgData.heads.map((member: any, i: number) => (
-                            <ProfileCard key={i} {...member} image="/logo.png" delay={i * 0.1} />
+                        {data.ctgHeads.map((member, i) => (
+                            <ProfileCard key={member.id} {...member} image={member.image || "/logo.png"} delay={i * 0.1} />
                         ))}
                     </div>
                 </section>
             )}
 
-            {ctgData.deputies && ctgData.deputies.length > 0 && (
+            {data.ctgDeputies.length > 0 && (
                 <section className="w-full max-w-[1600px] mx-auto px-6 mb-48 relative z-10 text-center">
                     <Reveal width="100%" className="mb-20 flex flex-col items-center">
                         <span className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.5em] mb-4 text-center">Chattogram Support</span>
@@ -231,8 +302,8 @@ export default function TeamPage() {
                         </div>
                     </Reveal>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-[1400px] mx-auto">
-                        {ctgData.deputies.map((member: any, i: number) => (
-                            <ProfileCard key={i} {...member} image="/logo.png" delay={i * 0.05} />
+                        {data.ctgDeputies.map((member, i) => (
+                            <ProfileCard key={member.id} {...member} image={member.image || "/logo.png"} delay={i * 0.05} />
                         ))}
                     </div>
                 </section>

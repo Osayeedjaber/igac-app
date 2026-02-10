@@ -14,9 +14,9 @@ export function About() {
                     <div className="relative">
                         <div className="md:sticky md:top-40 h-fit">
                             <span className="text-primary text-xs font-bold tracking-[0.3em] uppercase mb-6 block">Who We Are</span>
-                            <h2 className="text-4xl md:text-6xl font-serif font-bold leading-[1.1] text-foreground mb-8 text-left">
-                                Forging the <br />
-                                <span className="text-primary">Diplomats</span> <br />
+                            <h2 className="text-3xl md:text-6xl font-serif font-bold leading-[1.1] text-foreground mb-8 text-left">
+                                Forging the <br className="hidden md:block"/>
+                                <span className="text-primary">Diplomats</span> <br className="hidden md:block"/>
                                 of Tomorrow<span className="text-primary">.</span>
                             </h2>
                             <div className="w-20 h-1.5 bg-primary/20 rounded-full" />

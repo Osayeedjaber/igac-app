@@ -8,8 +8,32 @@ import { Instagram, MapPin, Target, Anchor, Ship, Waves, Globe2, MousePointer2 }
 import Link from "next/link";
 import { Button } from "@/components/ui/button-premium";
 
-export default function CTGRegionPage() {
-    const ctgData = teamData.regions.ctg;
+type MemberData = {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  department: string;
+  quote: string;
+  description: string;
+  category: string;
+  sort_order: number;
+  is_visible: boolean;
+  socials: Record<string, string>;
+};
+
+interface CTGProps {
+  ctgData: {
+    head: MemberData | null;
+    corePanel: MemberData[];
+    heads: MemberData[];
+    deputies: MemberData[];
+    executives: MemberData[];
+  };
+}
+
+export default function CTGRegionPage({ ctgData }: CTGProps) {
+    const ctgStaticData = teamData.regions.ctg;
 
     return (
         <main className="min-h-screen bg-[#022c22] text-white overflow-x-hidden selection:bg-emerald-500/30">
@@ -51,7 +75,7 @@ export default function CTGRegionPage() {
                         </h1>
 
                         <p className="text-xl md:text-3xl text-emerald-100/60 font-medium leading-relaxed max-w-4xl mx-auto italic font-serif">
-                            "{ctgData.description}"
+                            "{ctgStaticData.description}"
                         </p>
                     </Reveal>
                 </div>
@@ -81,11 +105,10 @@ export default function CTGRegionPage() {
                                     <div className="absolute -inset-10 bg-emerald-500/10 blur-[120px] rounded-full" />
 
                                     <div className="relative border-4 border-emerald-500/20 rounded-[3rem] p-3 bg-emerald-950/40 backdrop-blur-xl shadow-2xl hover:border-emerald-500/40 transition-colors duration-500">
-                                        <ProfileCard
+                                        {ctgData.head && <ProfileCard
                                             {...ctgData.head}
-                                            image="/ctghead.jpg"
                                             delay={0}
-                                        />
+                                        />}
                                     </div>
 
                                     {/* Visionary Badge */}
@@ -109,7 +132,7 @@ export default function CTGRegionPage() {
                                 </h2>
 
                                 <p className="text-lg text-emerald-100/60 leading-relaxed mb-10 font-light border-l border-emerald-500/20 pl-6">
-                                    Under the leadership of {ctgData.head.name}, IGAC Chattogram has grown into a vibrant hub for diplomatic discourse. We are committed to providing the youth of the port city with the same excellence and global perspective that IGAC is known for nationwide.
+                                    Under the leadership of {ctgData.head?.name ?? 'our Regional Head'}, IGAC Chattogram has grown into a vibrant hub for diplomatic discourse. We are committed to providing the youth of the port city with the same excellence and global perspective that IGAC is known for nationwide.
                                 </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
@@ -125,12 +148,12 @@ export default function CTGRegionPage() {
                                     </div>
                                 </div>
 
-                                <Link href={ctgData.instagram} target="_blank">
+                                <a href={ctgStaticData.instagram} target="_blank" rel="noopener noreferrer">
                                     <Button variant="primary" className="gap-3 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                                         <Instagram className="w-4 h-4" />
                                         Follow IGAC CTG
                                     </Button>
-                                </Link>
+                                </a>
                             </Reveal>
                         </div>
                     </div>
@@ -150,8 +173,8 @@ export default function CTGRegionPage() {
                         </Reveal>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-                            {ctgData.corePanel.map((member: any, i: number) => (
-                                <Reveal key={i} delay={i * 0.1}>
+                            {ctgData.corePanel.map((member) => (
+                                <Reveal key={member.id} delay={member.sort_order * 0.1} width="100%">
                                     <ProfileCard {...member} delay={0} />
                                 </Reveal>
                             ))}
@@ -175,9 +198,9 @@ export default function CTGRegionPage() {
                                 </h2>
                             </Reveal>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {ctgData.heads.map((member: any, i: number) => (
-                                    <Reveal key={i} delay={i * 0.1}>
-                                        <ProfileCard {...member} image="/logo.png" delay={0} />
+                                {ctgData.heads.map((member) => (
+                                    <Reveal key={member.id} delay={member.sort_order * 0.1} width="100%">
+                                        <ProfileCard {...member} delay={0} />
                                     </Reveal>
                                 ))}
                             </div>
@@ -186,7 +209,7 @@ export default function CTGRegionPage() {
 
                     {/* Deputies */}
                     {ctgData.deputies && ctgData.deputies.length > 0 && (
-                        <div>
+                        <div className="mb-32">
                             <Reveal width="100%" className="mb-16 text-center">
                                 <span className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.5em] mb-4 block">Chattogram Support</span>
                                 <h2 className="text-4xl md:text-6xl font-serif font-black text-white tracking-tighter">
@@ -194,9 +217,28 @@ export default function CTGRegionPage() {
                                 </h2>
                             </Reveal>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {ctgData.deputies.map((member: any, i: number) => (
-                                    <Reveal key={i} delay={i * 0.1}>
-                                        <ProfileCard {...member} image="/logo.png" delay={0} />
+                                {ctgData.deputies.map((member) => (
+                                    <Reveal key={member.id} delay={member.sort_order * 0.1} width="100%">
+                                        <ProfileCard {...member} delay={0} />
+                                    </Reveal>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Executives */}
+                    {ctgData.executives && ctgData.executives.length > 0 && (
+                        <div>
+                            <Reveal width="100%" className="mb-16 text-center">
+                                <span className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.5em] mb-4 block">Chattogram Team</span>
+                                <h2 className="text-4xl md:text-6xl font-serif font-black text-white tracking-tighter">
+                                    Executives <span className="text-emerald-400 italic">(CTG)</span>
+                                </h2>
+                            </Reveal>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {ctgData.executives.map((member) => (
+                                    <Reveal key={member.id} delay={member.sort_order * 0.1} width="100%">
+                                        <ProfileCard {...member} delay={0} />
                                     </Reveal>
                                 ))}
                             </div>
