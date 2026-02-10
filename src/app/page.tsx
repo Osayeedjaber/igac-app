@@ -19,10 +19,10 @@ import { getTeamMembers, getSiteStats } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "IGAC | International Global Affairs Council",
-  description: "The biggest Model United Nations conference in South East Asia. Empowering the next generation of leaders through diplomacy and negotiation.",
+  description: "Architecting the next era of global leadership. IGAC is South East Asia's premier Model UN platform, empowering 4,000+ youth through high-stakes diplomacy and strategic negotiation.",
   openGraph: {
     title: "IGAC | International Global Affairs Council",
-    description: "The biggest Model United Nations conference in South East Asia. Join us in shaping tomorrow's leaders.",
+    description: "Architecting the next era of global leadership. IGAC is South East Asia's premier Model UN platform, empowering 4,000+ youth through high-stakes diplomacy and strategic negotiation.",
     url: "https://igac.info",
     siteName: "IGAC",
     images: [
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "IGAC | International Global Affairs Council",
-    description: "The biggest Model United Nations conference in South East Asia.",
+    description: "Architecting the next era of global leadership. IGAC is South East Asia's premier Model UN platform, empowering 4,000+ youth.",
     images: ["/past-events/igacmuns2bannerjpg.jpg"],
   },
 };
@@ -104,6 +104,9 @@ export default async function Home() {
   };
   const gs = corePanel.find(m => m.role.toLowerCase().includes("general secretary")) || corePanel[0];
 
+  // Ensure president is first in governing body for "Meet the Visionaries"
+  const governingBodyWithPresident = [president, ...governingBody.filter(m => m.role !== "President")];
+
   // CTG head for regional presence section
   const ctgHead = teamData.ctgHead ? {
     name: teamData.ctgHead.name,
@@ -119,7 +122,7 @@ export default async function Home() {
       <Community />
       <PresidentMessage president={president} />
       <GSMessage gs={gs} />
-      <GoverningBodyHome members={governingBody} />
+      <GoverningBodyHome members={governingBodyWithPresident} />
       {/* Core Panel Preview */}
       <section className="py-24 overflow-hidden border-t border-white/5 relative">
         <div className="container mx-auto px-6 mb-16 text-center flex flex-col items-center">

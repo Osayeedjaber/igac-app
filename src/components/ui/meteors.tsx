@@ -22,6 +22,10 @@ export const Meteors = ({
         // Calculate position to evenly distribute meteors across container width
         const position = idx * (800 / meteorCount) - 400; // Spread across 800px range, centered
 
+        // Deterministic but varied values based on index (no Math.random for SSR compatibility)
+        const delay = (idx * 0.3) % 5; // 0 to 5s range, varies by index
+        const duration = 5 + (idx % 5); // 5 to 9s range, varies by index
+
         return (
           <span
             key={"meteor" + idx}
@@ -31,10 +35,10 @@ export const Meteors = ({
               className,
             )}
             style={{
-              top: "-40px", // Start above the container
+              top: "-40px",
               left: position + "px",
-              animationDelay: Math.random() * 5 + "s", // Random delay between 0-5s
-              animationDuration: Math.floor(Math.random() * (10 - 5) + 5) + "s", // Keep some randomness in duration
+              animationDelay: delay + "s",
+              animationDuration: duration + "s",
             }}
           ></span>
         );

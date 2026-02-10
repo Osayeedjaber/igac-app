@@ -1,6 +1,6 @@
 export const siteConfig = {
     name: "IGACMUN",
-    description: "The biggest Model United Nations conference in South East Asia. Empowering the next generation of leaders.",
+    description: "Architecting the next era of global leadership. IGAC is South East Asia's premier Model UN platform, empowering 4,000+ youth through high-stakes diplomacy and strategic negotiation.",
     contact: {
         email: "intlglobalaffairscouncil@gmail.com",
         phone: "+880 18153-53082",
@@ -79,6 +79,7 @@ export const teamData = {
         { name: "Miftahul Jannat Muntaha", role: "Organizing Secretary", image: "/corepanel/ORGANIZING SECRETARY _ miftahul Jannat muntaha.jpg", socials: { facebook: "#", instagram: "#" } },
         { name: "Arefin Abir Saad", role: "Organizing Secretary", image: "/corepanel/ORGANIZING SECRETARY arefin abir saad.jpg", socials: { facebook: "#", instagram: "#" } },
         { name: "Afsan Talukder", role: "Organizing Secretary", image: "/corepanel/afsan talukder  ORGANIZING SECRETARY.jpg", socials: { facebook: "#", instagram: "#" } },
+        { name: "Tahmid Ashfaque", role: "Organizing Secretary", image: "/corepanel/tahmid .jpg", socials: { facebook: "#", instagram: "#" } },
     ],
     heads: [
         { 

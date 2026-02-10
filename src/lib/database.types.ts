@@ -119,27 +119,33 @@ export interface Database {
         Row: {
           id: string;
           action: string;
-          target_type: string;
-          target_id: string;
-          target_name: string;
-          details: string;
+          entity_type: string;
+          entity_id: string;
+          entity_name: string;
+          details: Json;
+          ip_address: string | null;
+          user_agent: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           action: string;
-          target_type: string;
-          target_id?: string;
-          target_name?: string;
-          details?: string;
+          entity_type: string;
+          entity_id?: string;
+          entity_name?: string;
+          details?: Json;
+          ip_address?: string | null;
+          user_agent?: string | null;
           created_at?: string;
         };
         Update: {
           action?: string;
-          target_type?: string;
-          target_id?: string;
-          target_name?: string;
-          details?: string;
+          entity_type?: string;
+          entity_id?: string;
+          entity_name?: string;
+          details?: Json;
+          ip_address?: string | null;
+          user_agent?: string | null;
         };
         Relationships: [];
       };

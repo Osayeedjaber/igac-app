@@ -16,7 +16,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://igac.info"),
   title: "IGAC | International Global Affairs Council",
-  description: "The biggest Model United Nations conference in South East Asia. Empowering the next generation of leaders.",
+  description: "Architecting the next era of global leadership. IGAC is South East Asia's premier Model UN platform, empowering 4,000+ youth through high-stakes diplomacy and strategic negotiation.",
   keywords: ["IGAC", "MUN", "Model United Nations", "Diplomacy", "International Global Affairs Council", "Dhaka", "South East Asia"],
   icons: {
     icon: "/logo.png",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "IGAC | International Global Affairs Council",
-    description: "The biggest Model United Nations conference in South East Asia. Empowering the next generation of leaders.",
+    description: "Architecting the next era of global leadership. IGAC is South East Asia's premier Model UN platform, empowering 4,000+ youth through high-stakes diplomacy and strategic negotiation.",
     url: "https://igac.info",
     siteName: "IGAC",
     images: [

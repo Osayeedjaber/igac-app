@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     .limit(limit);
 
   if (entityType && entityType !== "all") {
-    query = query.eq("target_type", entityType);
+    query = query.eq("entity_type", entityType);
   }
 
   const { data, error } = await query;
@@ -32,14 +32,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Map DB column names to what dashboard expects
+  // Map DB column names to what dashboard expects (DB uses entity_*, API uses entity_*)
   const mapped = (data || []).map((item: Record<string, unknown>) => ({
     id: item.id,
     action: (item.action as string) || "",
-    entity_type: (item.target_type as string) || "",
-    entity_id: (item.target_id as string) || "",
-    entity_name: (item.target_name as string) || "",
-    details: item.details || "",
+    entity_type: (item.entity_type as string) || "",
+    entity_id: (item.entity_id as string) || "",
+    entity_name: (item.entity_name as string) || "",
+    details: typeof item.details === 'string' ? item.details : (item.details ? JSON.stringify(item.details) : ""),
     created_at: item.created_at,
   }));
 
@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
 
   const logEntry = {
     action: body.action,
-    target_type: body.entity_type || body.target_type,
-    target_id: body.entity_id || body.target_id || "",
-    target_name: body.entity_name || body.target_name || "",
+    entity_type: body.entity_type || "",
+    entity_id: body.entity_id || "",
+    entity_name: body.entity_name || "",
     details: body.details || "",
   };
 

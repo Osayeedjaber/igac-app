@@ -66,7 +66,7 @@ type ActivityLogEntry = {
   entity_type: string;
   entity_id: string;
   entity_name: string;
-  details: Record<string, unknown>;
+  details: string | Record<string, unknown> | null;
   created_at: string;
 };
 
@@ -253,9 +253,24 @@ export default function AdminDashboard() {
 
   const showToast = useCallback((msg: string) => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); }, []);
 
-  const logActivity = useCallback(async (action: string, entity_type: string, entity_id?: string, entity_name?: string) => {
-    try { await fetch("/api/activity", { method: "POST", headers: hdrs(), body: JSON.stringify({ action, entity_type, entity_id, entity_name }) }); } catch { /* silent */ }
-  }, [hdrs]);
+  const fetchActivityLogs = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch("/api/activity?limit=100", { headers: authHdrs() });
+      if (res.ok) {
+        const data = await res.json();
+        setActivityLogs(Array.isArray(data) ? data : []);
+      }
+    } catch { /* silent */ }
+  }, [token, authHdrs]);
+
+  const logActivity = useCallback(async (action: string, entity_type: string, entity_id?: string, entity_name?: string, details?: string) => {
+    try {
+      await fetch("/api/activity", { method: "POST", headers: hdrs(), body: JSON.stringify({ action, entity_type, entity_id, entity_name, details }) });
+      // Refresh activity logs after logging
+      await fetchActivityLogs();
+    } catch { /* silent */ }
+  }, [hdrs, fetchActivityLogs]);
 
   // ─── Fetch ─────────────────────────────────────────
   const fetchAllData = useCallback(async () => {
@@ -329,8 +344,26 @@ export default function AdminDashboard() {
       const res = await fetch(url, { method, headers: hdrs(), body: JSON.stringify(creating ? body : memberToSave) });
       if (res.ok) {
         const saved = await res.json();
-        if (creating) { setMembers((p) => [...p, saved]); await logActivity("create", "team_member", saved.id, saved.name); }
-        else { setMembers((p) => p.map((m) => (m.id === saved.id ? saved : m))); await logActivity("update", "team_member", saved.id, saved.name); }
+        if (creating) {
+          setMembers((p) => [...p, saved]);
+          await logActivity("create", "team_member", saved.id, saved.name, `Added ${saved.role} to ${saved.category}`);
+        } else {
+          const original = members.find(m => m.id === saved.id);
+          const changes: string[] = [];
+          if (original) {
+            if ((original.name || '') !== (saved.name || '')) changes.push(`name: "${original.name}" → "${saved.name}"`);
+            if ((original.role || '') !== (saved.role || '')) changes.push(`role: "${original.role}" → "${saved.role}"`);
+            if ((original.category || '') !== (saved.category || '')) changes.push(`category: "${original.category}" → "${saved.category}"`);
+            if ((original.image || '') !== (saved.image || '')) changes.push(`image updated`);
+            if ((original.department || '') !== (saved.department || '')) changes.push(`department: "${original.department || 'none'}" → "${saved.department || 'none'}"`);
+            if ((original.quote || '') !== (saved.quote || '')) changes.push(`quote updated`);
+            if (original.is_visible !== saved.is_visible) changes.push(`visibility: ${saved.is_visible ? 'visible' : 'hidden'}`);
+            if (original.sort_order !== saved.sort_order) changes.push(`order: ${original.sort_order} → ${saved.sort_order}`);
+          }
+          const details = changes.length > 0 ? changes.join(" • ") : "No changes detected";
+          setMembers((p) => p.map((m) => (m.id === saved.id ? saved : m)));
+          await logActivity("update", "team_member", saved.id, saved.name, details);
+        }
         setEditingMember(null); setIsNewMember(false);
         showToast(creating ? "Member added!" : "Member updated!");
       } else { const err = await res.json().catch(() => null); showToast(`Failed to save: ${err?.error || res.statusText || "Unknown error"}`); }
@@ -435,8 +468,25 @@ export default function AdminDashboard() {
       const res = await fetch(url, { method, headers: hdrs(), body: JSON.stringify(isNewEvent ? body : editingEvent) });
       if (res.ok) {
         const saved = await res.json();
-        if (isNewEvent) { setEvents((p) => [...p, saved]); await logActivity("create", "event", saved.id, saved.title); }
-        else { setEvents((p) => p.map((e) => (e.id === saved.id ? saved : e))); await logActivity("update", "event", saved.id, saved.title); }
+        if (isNewEvent) {
+          setEvents((p) => [...p, saved]);
+          await logActivity("create", "event", saved.id, saved.title, `Added event on ${saved.date}`);
+        } else {
+          const original = events.find(e => e.id === saved.id);
+          const changes: string[] = [];
+          if (original) {
+            if ((original.title || '') !== (saved.title || '')) changes.push(`title: "${original.title}" → "${saved.title}"`);
+            if ((original.date || '') !== (saved.date || '')) changes.push(`date: "${original.date}" → "${saved.date}"`);
+            if ((original.location || '') !== (saved.location || '')) changes.push(`location: "${original.location}" → "${saved.location}"`);
+            if ((original.description || '') !== (saved.description || '')) changes.push(`description updated`);
+            if ((original.image || '') !== (saved.image || '')) changes.push(`image updated`);
+            if (original.featured !== saved.featured) changes.push(`featured: ${saved.featured ? 'yes' : 'no'}`);
+            if (original.is_visible !== saved.is_visible) changes.push(`visibility: ${saved.is_visible ? 'visible' : 'hidden'}`);
+          }
+          const details = changes.length > 0 ? changes.join(" • ") : "No changes detected";
+          setEvents((p) => p.map((e) => (e.id === saved.id ? saved : e)));
+          await logActivity("update", "event", saved.id, saved.title, details);
+        }
         setEditingEvent(null); setIsNewEvent(false);
         showToast(isNewEvent ? "Event added!" : "Event updated!");
       } else { const err = await res.json().catch(() => null); showToast(`Failed to save: ${err?.error || res.statusText || "Unknown error"}`); }
@@ -537,9 +587,22 @@ export default function AdminDashboard() {
     if (!siteSettings) return;
     setSaving(true);
     try {
+      // Store original for comparison
+      const originalSettings = { ...siteSettings };
       const res = await fetch("/api/settings", { method: "PUT", headers: hdrs(), body: JSON.stringify(siteSettings) });
-      if (res.ok) { const s = await res.json(); setSiteSettings(s); await logActivity("update", "settings", "main", "Site Settings"); showToast("Settings saved!"); }
-      else { const err = await res.json().catch(() => null); showToast(`Failed to save settings: ${err?.error || res.statusText || "Unknown error"}`); }
+      if (res.ok) {
+        const s = await res.json();
+        // Track what changed
+        const changes: string[] = [];
+        if (originalSettings.recruitment_open !== s.recruitment_open) changes.push(`recruitment: ${s.recruitment_open ? 'opened' : 'closed'}`);
+        if (originalSettings.registration_open !== s.registration_open) changes.push(`registration: ${s.registration_open ? 'opened' : 'closed'}`);
+        if (originalSettings.maintenance_mode !== s.maintenance_mode) changes.push(`maintenance: ${s.maintenance_mode ? 'enabled' : 'disabled'}`);
+        if (originalSettings.announcement !== s.announcement) changes.push(`announcement updated`);
+        const details = changes.length > 0 ? changes.join(", ") : "Updated site settings";
+        setSiteSettings(s);
+        await logActivity("update", "settings", "main", "Site Settings", details);
+        showToast("Settings saved!");
+      } else { const err = await res.json().catch(() => null); showToast(`Failed to save settings: ${err?.error || res.statusText || "Unknown error"}`); }
     } catch (e) { showToast(`Failed to save settings: ${e instanceof Error ? e.message : "Unknown"}`); }
     setSaving(false);
   };
@@ -1031,20 +1094,60 @@ export default function AdminDashboard() {
               {/* ════════════ ACTIVITY TAB ════════════ */}
               {activeTab === "activity" && (
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-serif font-bold mb-2">Activity Log</h1>
-                  <p className={`${txtSec} text-sm mb-6`}>Track all changes made to your content</p>
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-serif font-bold mb-2">Activity Log</h1>
+                      <p className={`${txtSec} text-sm`}>Track all changes made to your content</p>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Clear all logs older than 1 day? This cannot be undone.")) return;
+                        try {
+                          const res = await fetch("/api/activity?days=1", { method: "DELETE", headers: hdrs() });
+                          if (res.ok) {
+                            const data = await res.json();
+                            await fetchActivityLogs();
+                            showToast(`Cleared ${data.deleted || 0} old logs`);
+                          }
+                        } catch (e) {
+                          showToast("Failed to clear logs");
+                        }
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition"
+                    >
+                      <Trash2 size={16} /> Clear Old Logs
+                    </button>
+                  </div>
                   <div className="space-y-2">
-                    {activityLogs.map((log) => (
-                      <div key={log.id} className={`${bgCard} border ${border} rounded-xl p-4 flex items-center gap-4`}>
-                        <span className={`text-xs px-2 py-1 rounded-lg font-bold whitespace-nowrap ${(log.action || "").includes("create") ? "text-emerald-400 bg-emerald-500/10" : (log.action || "").includes("delete") ? "text-red-400 bg-red-500/10" : (log.action || "").includes("export") ? "text-purple-400 bg-purple-500/10" : "text-blue-400 bg-blue-500/10"}`}>
-                          {(log.action || "").replace(/_/g, " ").toUpperCase()}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm"><span className="font-medium">{(log.entity_type || "").replace(/_/g, " ")}</span>{log.entity_name && <span className={txtSec}>: {log.entity_name}</span>}</p>
+                    {activityLogs.map((log) => {
+                      const entityType = (log.entity_type || "unknown").replace(/_/g, " ");
+                      const entityName = log.entity_name || "";
+                      const detailsText = typeof log.details === 'string' ? log.details : (log.details ? JSON.stringify(log.details) : "");
+                      const hasDetails = detailsText.trim() !== '';
+
+                      return (
+                        <div key={log.id} className={`${bgCard} border ${border} rounded-xl p-4`}>
+                          <div className="flex items-start gap-4">
+                            <span className={`text-xs px-2 py-1 rounded-lg font-bold whitespace-nowrap ${(log.action || "").includes("create") ? "text-emerald-400 bg-emerald-500/10" : (log.action || "").includes("delete") ? "text-red-400 bg-red-500/10" : (log.action || "").includes("export") ? "text-purple-400 bg-purple-500/10" : "text-blue-400 bg-blue-500/10"}`}>
+                              {(log.action || "update").replace(/_/g, " ").toUpperCase()}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm">
+                                <span className="font-medium">{entityType}</span>
+                                {entityName && <span className={txtSec}>: {entityName}</span>}
+                              </p>
+                              {hasDetails && (
+                                <p className={`text-xs ${txtSec} mt-1.5 pl-3 border-l-2 border-primary/30`}>{detailsText}</p>
+                              )}
+                            </div>
+                            <p className={`text-xs ${txtSec} shrink-0 text-right whitespace-nowrap`}>
+                              {new Date(log.created_at).toLocaleDateString()}<br/>
+                              {new Date(log.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
                         </div>
-                        <p className={`text-xs ${txtSec} shrink-0`}>{new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString()}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {activityLogs.length === 0 && <div className={`${bgCard} border ${border} rounded-2xl p-12 text-center ${txtSec}`}>No activity yet.</div>}
                   </div>
                 </div>
