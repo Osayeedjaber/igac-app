@@ -205,9 +205,9 @@ export default function ImunClient() {
                         </motion.div>
 
                         {/* Title */}
-                        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.3 }} className="font-primary text-5xl md:text-7xl lg:text-8xl text-[#f2c45f] leading-tight tracking-[0.05em] uppercase mb-4 drop-shadow-[0_10px_20px_rgba(242,196,95,0.2)]">
-                            <span className="block overflow-hidden"><motion.span className="block">Imperial Model</motion.span></span>
-                            <span className="block overflow-hidden"><motion.span className="block">United Nations</motion.span></span>
+                        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.3 }} className="font-primary text-[10vw] sm:text-5xl md:text-7xl lg:text-8xl text-[#f2c45f] leading-[1.1] tracking-wide uppercase mb-4 drop-shadow-[0_10px_20px_rgba(242,196,95,0.2)]">
+                            <span className="block break-words px-2">Imperial Model</span>
+                            <span className="block break-words px-2">United Nations</span>
                         </motion.h1>
                         
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex items-center justify-center gap-6 mt-8 mb-10 w-full">
