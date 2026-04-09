@@ -98,8 +98,16 @@ export default function PortalDashboard() {
       filterStatus === "SCANNED_BY_ME" ? scannedByMe :
       delCheckins.length === 0;
 
-    const matchesDay = filterDay === "ALL" ? true : delCheckins.some(c => c.day === filterDay);
+    let matchesDay = true;
+    if (filterDay !== "ALL") {
+      matchesDay = delCheckins.some(c => c.day === filterDay);
+    }
 
+    // Only apply the status and day filters if they aren't "ALL"
+    if (filterStatus === "ALL" && filterDay === "ALL") {
+        return matchesSearch;
+    }
+    
     return matchesSearch && matchesStatus && matchesDay;
   });
 
@@ -204,6 +212,7 @@ export default function PortalDashboard() {
                   <th className="px-6 py-3">Country</th>
                   <th className="px-6 py-3">Committee</th>
                   <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Logs Info</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -220,7 +229,7 @@ export default function PortalDashboard() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1 items-start">
                           {isHereToday ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-500 border border-green-500/20">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-500 border border-green-500/20" title={checks.map(c => `Day ${c.day} - ${c.checkpoint}`).join('\n')}>
                               Scanned ({checks.length}x)
                             </span>
                           ) : (
@@ -229,11 +238,23 @@ export default function PortalDashboard() {
                             </span>
                           )}
                           {myChecks.length > 0 && (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-medium text-orange-400 border border-orange-500/20">
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-medium text-orange-400 border border-orange-500/20" title={myChecks.map(c => `Day ${c.day} - ${c.checkpoint}`).join('\n')}>
                               By Me ({myChecks.length}x)
                             </span>
                           )}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-xs text-zinc-400">
+                        {checks.length > 0 ? (
+                           <div className="flex flex-col gap-1">
+                             {checks.slice(0, 3).map((c, idx) => (
+                                <span key={idx} className="block">Day {c.day} • {c.checkpoint}</span>
+                             ))}
+                             {checks.length > 3 && <span className="text-zinc-600 italic">+{checks.length - 3} more...</span>}
+                           </div>
+                        ) : (
+                           <span className="text-zinc-600">-</span>
+                        )}
                       </td>
                     </tr>
                   );

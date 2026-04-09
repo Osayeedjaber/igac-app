@@ -86,7 +86,7 @@ export default function PortalScan() {
 
     if (delError || !delegates || delegates.length === 0) {
       setScanState("error");
-      setMessage("Unknown QR Code: No record found.");
+      setMessage(`Unknown QR Code: "${safePayload}"`);
       resetStateAfterWait();
       return;
     }
@@ -102,7 +102,7 @@ export default function PortalScan() {
   const confirmCheckIn = async () => {
     if (!lastScanned || !secretariatId) return;
 
-    if (!window.confirm(`Do you really want to check in ${lastScanned.full_name} for Day ${day} (${checkpoint})?`)) return;
+    if (!window.confirm(`Are you sure you want to scan ${lastScanned.full_name} with ${lastScanned.committee || 'Unallocated'} and ${lastScanned.country || 'No Country'} --- for Day ${day} (${checkpoint}) ---?`)) return;
 
     setScanState("verifying");
     setMessage("Processing Check-in...");
