@@ -112,7 +112,7 @@ export async function POST(req: Request) {
 
     // 5. Send the Email
     await transporter.sendMail({
-      from: \`"IGAC Secretariat" <\${process.env.GMAIL_EMAIL}>\`,
+      from: `"IGAC Secretariat" <${process.env.GMAIL_EMAIL}>`,
       to: delegate.email,
       subject: "Your Official Delegate QR Code Check-in Credentials",
       html: htmlTemplate,
@@ -141,4 +141,4 @@ export async function POST(req: Request) {
     console.error("Mail Dispatch Error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
-}"
+}
