@@ -52,7 +52,7 @@ export function CommandCenterTab() {
     setIsSaving(true);
     setSaveMessage('');
     try {
-      await updateSystemSettingsAction(activeDay, activeCheckpoint);
+      await updateSystemSettingsAction({ active_day: activeDay, active_checkpoint: activeCheckpoint });
       setSaveMessage('Global Network Synced');
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (e: any) {

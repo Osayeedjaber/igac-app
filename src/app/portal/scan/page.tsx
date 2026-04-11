@@ -517,14 +517,25 @@ export default function PortalScan() {
           )}
 
           {scanState === "success" && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-green-500/95 backdrop-blur-sm p-6 text-center animate-in fade-in zoom-in duration-200">
+            <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center backdrop-blur-sm p-6 text-center animate-in fade-in zoom-in duration-200 ${
+              (lastScanned?.position?.toLowerCase().includes('ambassador') || lastScanned?.committee?.toLowerCase().includes('ambassador'))
+                ? 'bg-cyan-500/95' 
+                : 'bg-green-500/95'
+            }`}>
               <CheckCircle2 className="h-16 w-16 text-white mb-2 shadow-xl rounded-full" />
               <h2 className="text-2xl font-bold text-white mb-2">Access Granted</h2>
-              <p className="text-green-50 font-medium leading-tight">{message}</p>
+              <p className={`font-medium leading-tight ${
+                (lastScanned?.position?.toLowerCase().includes('ambassador') || lastScanned?.committee?.toLowerCase().includes('ambassador'))
+                  ? 'text-cyan-50' 
+                  : 'text-green-50'
+              }`}>{message}</p>
               {lastScanned && (
                 <div className="mt-4 w-full rounded-xl bg-black/20 p-4 text-left border border-white/10 overflow-hidden">
                   <p className="text-xs text-white/70 uppercase tracking-wide font-semibold truncate">{lastScanned.country} • {lastScanned.committee}</p>
                   <p className="text-lg text-white font-bold leading-tight mt-1">{lastScanned.full_name}</p>
+                  <p className="text-xs font-bold uppercase mt-1 opacity-80 text-white">
+                    {(lastScanned?.position?.toLowerCase().includes('ambassador') || lastScanned?.committee?.toLowerCase().includes('ambassador')) ? 'Campus Ambassador' : 'Delegate'}
+                  </p>
                   {scannedPayload && <p className="text-[10px] text-white/40 mt-3 font-mono break-all leading-tight">Code: {scannedPayload}</p>}
                 </div>
               )}

@@ -22,7 +22,7 @@ export default function CrmClient() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen text-white bg-zinc-950 relative selection:bg-yellow-500/30">
+    <div className="flex flex-col min-h-screen text-white bg-zinc-950 relative selection:bg-yellow-500/50 selection:text-black">
       {/* Subtle background glow */}
       <div className="absolute top-0 right-0 w-[800px] h-[500px] pointer-events-none bg-gradient-to-b from-yellow-500/5 to-transparent z-0 blur-3xl opacity-50"></div>
 

@@ -302,11 +302,11 @@ export async function fetchSystemSettingsAction() {
   return data || { active_day: 1, active_checkpoint: 'registration' };
 }
 
-export async function updateSystemSettingsAction(day: number, checkpoint: string) {
+export async function updateSystemSettingsAction(updates: any) {
   await checkAuth();
   const supabase = getServiceSupabase();
   const { error } = await supabase.from('system_settings')
-    .upsert({ id: 1, active_day: day, active_checkpoint: checkpoint });
+    .upsert({ id: 1, ...updates });
   if (error) throw new Error(error.message);
   return true;
 }
