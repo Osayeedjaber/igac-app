@@ -13,6 +13,8 @@ const NAV_LINKS = [
     { name: "Secretariat", href: "/imun/secretariat" },
     { name: "Committees", href: "/imun/committees" },
     { name: "Schedule", href: "/imun/schedule" },
+    { name: "Campus Ambassadors", href: "/imun/campus-ambassadors" },
+    { name: "Awardees", href: "/imun/awardees" },
 ];
 
 export function ImunNavbar() {

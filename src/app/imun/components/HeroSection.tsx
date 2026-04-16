@@ -121,7 +121,7 @@ export default function HeroSection() {
                     className="mt-4 md:mt-6 z-30"
                 >
                     <h2 className="font-primary font-medium text-xs md:text-base lg:text-xl text-[#f2c45f] uppercase tracking-[0.2em] md:tracking-[0.4em] drop-shadow-sm whitespace-nowrap text-center">
-                        CONFLICT TO CONSENSUS
+                        THE PROPHECY BEGINS
                     </h2>
                 </motion.div>
 

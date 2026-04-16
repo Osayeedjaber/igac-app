@@ -47,14 +47,17 @@ type Delegate = Database["public"]["Tables"]["delegates"]["Row"];
 
 export default function PortalScan() {
   const router = useRouter();
-  const [day, setDay] = useState<1 | 2 | 3>(1);
+  const [day, setDay] = useState<1 | 2 | 3>(3); // Set to 3 as default as per active context
   const [checkpoint, setCheckpoint] = useState<"registration" | "committee">("registration");
   const [globalCheckpoint, setGlobalCheckpoint] = useState<"registration" | "committee" | "both">("both");
+  const [scanType, setScanType] = useState<"ENTRY" | "EXIT">("ENTRY");
+  const [isModeLocked, setIsModeLocked] = useState(false);
   
   const [scanState, setScanState] = useState<"idle" | "verifying" | "action_required" | "edit_auth" | "editing" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [lastScanned, setLastScanned] = useState<Delegate | null>(null);
   const [scannedPayload, setScannedPayload] = useState<string | null>(null);
+  const [scanHistory, setScanHistory] = useState<any[]>([]);
 
   const [passwordInput, setPasswordInput] = useState("");
   const [editorNameInput, setEditorNameInput] = useState("");
@@ -168,12 +171,13 @@ export default function PortalScan() {
           day: day,
           checkpoint: checkpoint,
           scanned_by_id: secretariatId,
+          scan_type: scanType
         });
 
         if (chkError) {
           if (chkError.code === "23505") { // Postgres "unique violation" automatically handles double scans
             setScanState("error");
-            setMessage(`${lastScanned.full_name} has ALREADY been scanned for Day ${day} (${checkpoint}).`);
+            setMessage(`${lastScanned.full_name} has ALREADY been scanned for Day ${day} (${checkpoint} ${scanType}).`);
             triggerHaptic(false);
           } else {
             setScanState("error");
@@ -181,8 +185,15 @@ export default function PortalScan() {
             triggerHaptic(false);
           }
         } else {
+          setScanHistory(prev => [{
+            id: lastScanned.id,
+            name: lastScanned.full_name,
+            committee: lastScanned.committee,
+            time: new Date().toLocaleTimeString(),
+            type: scanType
+          }, ...prev].slice(0, 10)); // Keep last 10
           setScanState("success");
-          setMessage(`Successfully checked in ${lastScanned.full_name}!`);
+          setMessage(`Successfully recorded ${scanType} for ${lastScanned.full_name}!`);
           triggerHaptic(true);
         }
 
@@ -346,6 +357,34 @@ export default function PortalScan() {
               ))}
             </div>
           </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-emerald-400/80">Scan Mode</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  if (scanType === "ENTRY") return;
+                  if (window.confirm("Switch to ENTRY mode? Ensure you are at an entry point.")) {
+                    setScanType("ENTRY");
+                  }
+                }}
+                className={`rounded-xl py-2 text-sm font-bold transition-all ${scanType === "ENTRY" ? "bg-green-500 text-green-950 shadow-lg shadow-green-500/20" : "bg-black/50 text-green-500/50 border border-green-500/20"}`}
+              >
+                ENTRY
+              </button>
+              <button
+                onClick={() => {
+                  if (scanType === "EXIT") return;
+                  if (window.confirm("Switch to EXIT mode? This will record delegates leaving the room.")) {
+                    setScanType("EXIT");
+                  }
+                }}
+                className={`rounded-xl py-2 text-sm font-bold transition-all ${scanType === "EXIT" ? "bg-rose-500 text-rose-950 shadow-lg shadow-rose-500/20" : "bg-black/50 text-rose-500/50 border border-rose-500/20"}`}
+              >
+                EXIT
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Dynamic Reader Box */}
@@ -433,8 +472,8 @@ export default function PortalScan() {
                </div>
 
                <div className="w-full mt-6 space-y-3">
-                 <button onClick={confirmCheckIn} className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 py-4 font-bold text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-transform hover:scale-[1.02] active:scale-95 text-lg">
-                   Authorize Entry 
+                 <button onClick={confirmCheckIn} className={`w-full rounded-xl bg-gradient-to-r ${scanType === 'ENTRY' ? 'from-blue-600 to-sky-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'from-rose-600 to-orange-500 shadow-[0_0_20px_rgba(244,63,94,0.3)]'} py-4 font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 text-lg uppercase tracking-wider`}>
+                   Authorize {scanType === 'ENTRY' ? 'Entry' : 'Exit'} 
                  </button>
                  <div className="grid grid-cols-2 gap-3 pb-8">
                    <button onClick={() => setScanState("edit_auth")} className="rounded-xl bg-black/50 py-3 font-semibold text-zinc-300 border border-white/10 hover:bg-white/10 transition-colors">
@@ -518,23 +557,27 @@ export default function PortalScan() {
 
           {scanState === "success" && (
             <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center backdrop-blur-sm p-6 text-center animate-in fade-in zoom-in duration-200 ${
-              (lastScanned?.position?.toLowerCase().includes('ambassador') || lastScanned?.committee?.toLowerCase().includes('ambassador'))
-                ? 'bg-cyan-500/95' 
-                : 'bg-green-500/95'
+              scanType === 'EXIT' 
+                ? 'bg-rose-500/95' 
+                : ((lastScanned as any)?.position?.toLowerCase().includes('ambassador') || lastScanned?.committee?.toLowerCase().includes('ambassador'))
+                  ? 'bg-cyan-500/95' 
+                  : 'bg-green-500/95'
             }`}>
               <CheckCircle2 className="h-16 w-16 text-white mb-2 shadow-xl rounded-full" />
-              <h2 className="text-2xl font-bold text-white mb-2">Access Granted</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">{scanType === 'EXIT' ? 'Exit Recorded' : 'Access Granted'}</h2>
               <p className={`font-medium leading-tight ${
-                (lastScanned?.position?.toLowerCase().includes('ambassador') || lastScanned?.committee?.toLowerCase().includes('ambassador'))
-                  ? 'text-cyan-50' 
-                  : 'text-green-50'
+                scanType === 'EXIT'
+                  ? 'text-rose-50'
+                  : ((lastScanned as any)?.position?.toLowerCase().includes('ambassador') || lastScanned?.committee?.toLowerCase().includes('ambassador'))
+                    ? 'text-cyan-50' 
+                    : 'text-green-50'
               }`}>{message}</p>
               {lastScanned && (
                 <div className="mt-4 w-full rounded-xl bg-black/20 p-4 text-left border border-white/10 overflow-hidden">
                   <p className="text-xs text-white/70 uppercase tracking-wide font-semibold truncate">{lastScanned.country} • {lastScanned.committee}</p>
                   <p className="text-lg text-white font-bold leading-tight mt-1">{lastScanned.full_name}</p>
                   <p className="text-xs font-bold uppercase mt-1 opacity-80 text-white">
-                    {(lastScanned?.position?.toLowerCase().includes('ambassador') || lastScanned?.committee?.toLowerCase().includes('ambassador')) ? 'Campus Ambassador' : 'Delegate'}
+                    {((lastScanned as any)?.position?.toLowerCase().includes('ambassador') || lastScanned?.committee?.toLowerCase().includes('ambassador')) ? 'Campus Ambassador' : 'Delegate'}
                   </p>
                   {scannedPayload && <p className="text-[10px] text-white/40 mt-3 font-mono break-all leading-tight">Code: {scannedPayload}</p>}
                 </div>
@@ -573,6 +616,28 @@ export default function PortalScan() {
           Hold QR code directly in front of the camera to verify access. The scanner resets automatically.
         </p>
 
+        {/* Scan History Section */}
+        {scanHistory.length > 0 && (
+          <div className="pt-4 animate-in slide-in-from-bottom-4 duration-500">
+            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">Recent Session Activity</h3>
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+              {scanHistory.map((scan, i) => (
+                <div key={i} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-sm">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[10px] ${scan.type === 'ENTRY' ? 'bg-green-500/20 text-green-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                    {scan.type === 'ENTRY' ? 'IN' : 'OUT'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white truncate">{scan.name}</p>
+                    <p className="text-[10px] text-zinc-500 truncate uppercase mt-0.5">{scan.committee || 'Unallocated'}</p>
+                  </div>
+                  <div className="text-[10px] font-mono text-zinc-500">
+                    {scan.time}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Custom React Confirmation overlay */}

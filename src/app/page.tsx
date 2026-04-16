@@ -9,6 +9,7 @@ import { GoverningBodyHome } from "@/components/sections/governing-body-home";
 import { RegionalPresence } from "@/components/sections/regional-presence";
 import { Impact } from "@/components/sections/impact";
 import { EventsPreview } from "@/components/sections/events-preview";
+import { ImunPreview } from "@/components/sections/imun-preview";
 import ScrollVelocity from "@/components/ScrollVelocity";
 import Link from "next/link";
 import { Award, Globe, MessageSquare, Users } from "lucide-react";
@@ -118,6 +119,7 @@ export default async function Home() {
   return (
     <main className="flex flex-col">
       <Hero />
+      <ImunPreview />
       <About />
       <Community />
       <PresidentMessage president={president} />

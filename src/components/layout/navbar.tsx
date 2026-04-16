@@ -86,10 +86,10 @@ export function Navbar() {
                     {/* CTA & Mobile Toggle */}
                     <div className="flex items-center gap-4 relative z-50">
                         <Link
-                            href="/join"
+                            href="/imun"
                             className="hidden md:inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#f2c45f] text-black rounded-full font-primary text-xs uppercase tracking-widest font-bold hover:bg-white transition-all duration-300 shadow-[0_0_20px_rgba(242,196,95,0.2)] hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] group"
                         >
-                            Join Us
+                            IMUN
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </Link>
 

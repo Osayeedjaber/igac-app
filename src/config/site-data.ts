@@ -17,6 +17,7 @@ export const navLinks = [
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
     { name: "The Team", href: "/team" },
+    { name: "IMUN Platform", href: "/imun" },
     { name: "IGAC CTG", href: "/regions/ctg" },
     { name: "Previous Events", href: "/events" },
     { name: "Join Us", href: "/join" },

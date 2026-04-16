@@ -38,6 +38,7 @@ export function RegistryTab() {
     email: "",
     country: "",
     committee: "",
+    position: "Delegate",
     transaction_id: "",
   });
   const [selectedDelegate, setSelectedDelegate] = useState<Delegate | null>(
@@ -212,6 +213,7 @@ export function RegistryTab() {
         email: newDelegate.email.trim().toLowerCase(),
         country: newDelegate.country.trim() || null,
         committee: newDelegate.committee.trim() || null,
+        position: newDelegate.position.trim(),
         transaction_id: newDelegate.transaction_id.trim() || null,
         qr_token: qrToken,
         mail_status: "PENDING",
@@ -224,6 +226,7 @@ export function RegistryTab() {
         email: "",
         country: "",
         committee: "",
+        position: "Delegate",
         transaction_id: "",
       });
     } catch (err: any) {
@@ -239,6 +242,15 @@ export function RegistryTab() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Delegate Registry</h2>
         <div className="flex gap-2">
+          <button
+            onClick={() => {
+              const url = `/api/export?format=csv&type=all`;
+              window.open(url, '_blank');
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition border rounded-md border-zinc-700 bg-white/5 hover:bg-white/10 text-zinc-300"
+          >
+            <Download className="w-4 h-4" /> Master Export (API)
+          </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition border rounded-md border-zinc-700 bg-sky-600 hover:bg-sky-500 text-white"
@@ -460,22 +472,42 @@ export function RegistryTab() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-1">
-                  Transaction ID *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newDelegate.transaction_id}
-                  onChange={(e) =>
-                    setNewDelegate({
-                      ...newDelegate,
-                      transaction_id: e.target.value,
-                    })
-                  }
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 text-white outline-none focus:border-sky-500 font-mono"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">
+                    Transaction ID *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newDelegate.transaction_id}
+                    onChange={(e) =>
+                      setNewDelegate({
+                        ...newDelegate,
+                        transaction_id: e.target.value,
+                      })
+                    }
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 text-white outline-none focus:border-sky-500 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-1">
+                    Position *
+                  </label>
+                  <select
+                    value={newDelegate.position}
+                    onChange={(e) =>
+                      setNewDelegate({
+                        ...newDelegate,
+                        position: e.target.value,
+                      })
+                    }
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded p-2.5 text-sm text-white outline-none focus:border-sky-500"
+                  >
+                    <option value="Delegate">Delegate</option>
+                    <option value="Campus Ambassador">Campus Ambassador</option>
+                  </select>
+                </div>
               </div>
               <div className="flex gap-3 justify-end mt-6">
                 <button

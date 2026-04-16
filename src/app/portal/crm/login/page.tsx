@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function CrmLoginPage() {
@@ -8,6 +8,21 @@ export default function CrmLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    // Check if already authenticated via session cookie
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/admin/crm-check');
+        if (res.ok) {
+          router.push('/portal/crm');
+        }
+      } catch (err) {
+        // Not authenticated, stay on login page
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -453,9 +453,9 @@ export function IngestionTab() {
                      onChange={(e) => setMappings({...mappings, [field.key]: e.target.value})}
                      className={`w-full bg-black/50 border rounded-lg px-3 py-2.5 text-sm text-white outline-none transition ${mappings[field.key] ? 'border-emerald-500/40 bg-emerald-950/10' : 'border-zinc-800 focus:border-zinc-600'}`}
                    >
-                     <option value="" className="text-zinc-600">-- Ignore --</option>
+                     <option value="" className="bg-zinc-900 text-zinc-400">-- Ignore --</option>
                      {rawHeaders.map(h => (
-                       <option key={h} value={h}>{h}</option>
+                       <option key={h} value={h} className="bg-zinc-900 text-white">{h}</option>
                      ))}
                    </select>
                  </div>

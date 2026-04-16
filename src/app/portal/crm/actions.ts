@@ -318,31 +318,53 @@ export async function fetchLiveAnalyticsAction(day: number) {
   const { count: totalDelegates } = await supabase.from('delegates').select('*', { count: 'exact', head: true });
   
   const { data: checkins } = await supabase.from('delegate_checkins')
-    .select('id, delegate_id, checkpoint, created_at')
+    .select('id, delegate_id, checkpoint, created_at, scan_type')
     .eq('day', day)
     .order('created_at', { ascending: false });
     
   const registrationSet = new Set();
   const committeeSet = new Set();
+  const hourlyVelocity: Record<string, number> = {};
+  const exitSet = new Set();
   
   (checkins || []).forEach((c: any) => {
-    if (c.checkpoint === 'registration') registrationSet.add(c.delegate_id);
-    if (c.checkpoint === 'committee') committeeSet.add(c.delegate_id);
+    // Basic Entry Sets
+    if (c.scan_type === 'EXIT') {
+       exitSet.add(c.delegate_id);
+    } else {
+       if (c.checkpoint === 'registration') registrationSet.add(c.delegate_id);
+       if (c.checkpoint === 'committee') committeeSet.add(c.delegate_id);
+    }
+
+    // Velocity Calculation (Hourly)
+    const hour = new Date(c.created_at).getHours();
+    const label = `${hour}:00`;
+    hourlyVelocity[label] = (hourlyVelocity[label] || 0) + 1;
   });
 
+  // Sort velocity keys to ensure chronological order
+  const velocityData = Object.entries(hourlyVelocity)
+    .map(([time, count]) => ({ time, count }))
+    .sort((a, b) => {
+       const hA = parseInt(a.time);
+       const hB = parseInt(b.time);
+       return hA - hB;
+    });
+
   const { data: delegates } = await supabase.from('delegates').select('id, full_name, committee, country');
-  const committeeStats: Record<string, { total: number, reg_present: number, comm_present: number }> = {};
+  const committeeStats: Record<string, { total: number, reg_present: number, comm_present: number, exits: number }> = {};
   
   const delegateMap: Record<string, any> = {};
   
   (delegates || []).forEach((d: any) => {
     delegateMap[d.id] = d;
     const comm = d.committee || 'Unallocated';
-    if (!committeeStats[comm]) committeeStats[comm] = { total: 0, reg_present: 0, comm_present: 0 };
+    if (!committeeStats[comm]) committeeStats[comm] = { total: 0, reg_present: 0, comm_present: 0, exits: 0 };
     committeeStats[comm].total++;
     
     if (registrationSet.has(d.id)) committeeStats[comm].reg_present++;
     if (committeeSet.has(d.id)) committeeStats[comm].comm_present++;
+    if (exitSet.has(d.id)) committeeStats[comm].exits++;
   });
 
   const recentScans = (checkins || []).slice(0, 15).map((c: any) => {
@@ -351,6 +373,7 @@ export async function fetchLiveAnalyticsAction(day: number) {
       id: c.id || Math.random().toString(),
       time: c.created_at || new Date().toISOString(),
       checkpoint: c.checkpoint || 'Unknown',
+      scan_type: c.scan_type || 'ENTRY',
       full_name: d.full_name || 'Unknown Delegate',
       committee: d.committee || 'Unallocated',
       country: d.country || 'Unallocated'
@@ -361,7 +384,9 @@ export async function fetchLiveAnalyticsAction(day: number) {
     totalDelegates: totalDelegates || 0,
     registeredCount: registrationSet.size,
     committeeCount: committeeSet.size,
+    exitCount: exitSet.size,
     committeeStats,
-    recentScans
+    recentScans,
+    velocityData
   };
 }

@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import QRCode from "qrcode";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
@@ -41,19 +42,15 @@ export async function POST(req: Request) {
       .update({ mail_status: "PROCESSING" })
       .eq("id", delegateId);
 
-    // 2. Setup Nodemailer
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_EMAIL,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
+    // 2. Build Mail Template
+    // (Template remains the same as before)
     });
 
-    // 3. Generate QR Code Server-Side
+    // 3. Generate QR Code Server-Side (High Error Correction for better scanning)
     const qrDataUri = await QRCode.toDataURL(delegate.qr_token, {
-      margin: 1,
-      width: 250,
+      margin: 2,
+      width: 400,
+      errorCorrectionLevel: 'H',
       color: {
         dark: "#000000",
         light: "#ffffff"
@@ -63,64 +60,85 @@ export async function POST(req: Request) {
     // Convert Data URI to Base64 to attach as an inline image
     const base64Data = qrDataUri.split(',')[1];
 
-    // 4. Build HTML Template
+    // 4. Build HTML Template with Optimized Styling
     const htmlTemplate = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <h1 style="color: #111;">IGAC Delegate Credentials</h1>
-        </div>
-        <p style="color: #444; line-height: 1.6;">
-          Dear <strong>${delegate.full_name}</strong>,
-        </p>
-        <p style="color: #444; line-height: 1.6;">
-          Your allocation and registration for the International Global Action Conference (IGAC) is confirmed! 
-          Below is your personal QR Code. Please present this QR code during check-in for access.
-        </p>
-        
-        <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 24px; text-align: center; margin: 30px 0;">
-          <p style="font-size: 13px; color: #6c757d; font-weight: bold; text-transform: uppercase; margin-bottom: 15px;">Your Unique Identification Token</p>
-          
-          <img src="cid:qrcode" alt="QR Code" style="width: 250px; height: 250px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
-          
-          <div style="margin-top: 20px; font-family: monospace; font-size: 12px; color: #495057; background: #fff; padding: 8px; border-radius: 4px; border: 1px solid #dee2e6;">
-            ${delegate.qr_token}
-          </div>
-          
-          <div style="margin-top: 15px;">
-            <span style="background: #e0f2fe; color: #0284c7; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: bold; text-transform: uppercase;">
-              ${delegate.committee || "Unallocated"}
-            </span>
-          </div>
+      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 0; border: 1px solid #eeeeee; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+        <!-- Header Branding -->
+        <div style="background-color: #000000; padding: 30px 20px; text-align: center;">
+          <h1 style="color: #f2c45f; margin: 0; font-size: 24px; letter-spacing: 2px; text-transform: uppercase;">IGAC MUN</h1>
+          <p style="color: #ffffff; margin: 5px 0 0 0; font-size: 12px; letter-spacing: 1px; opacity: 0.8;">OFFICIAL DELEGATE CREDENTIALS</p>
         </div>
 
-        <p style="color: #444; line-height: 1.6;">
-          Keep this email safe or download the QR code before arriving to ensure a swift entrance.
-        </p>
-        
-        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-        
-        <p style="color: #888; font-size: 12px; text-align: center;">
-          © ${new Date().getFullYear()} International Global Action Conference. All rights reserved.
-        </p>
+        <div style="padding: 40px 30px;">
+          <p style="color: #111111; font-size: 18px; font-weight: 600; margin-bottom: 10px;">
+            Greetings, ${delegate.full_name}!
+          </p>
+          <p style="color: #555555; line-height: 1.6; font-size: 15px; margin-bottom: 25px;">
+            Your allocation for the <strong>International Global Action Conference (IGAC)</strong> has been finalized. 
+            We are excited to welcome you to this prestigious diplomatic assembly.
+          </p>
+          
+          <div style="background-color: #fcfcfc; border: 2px dashed #e2e8f0; border-radius: 16px; padding: 30px; text-align: center; margin: 20px 0;">
+            <p style="font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px;">Digital Entrance Pass</p>
+            
+            <div style="background-color: #ffffff; display: inline-block; padding: 15px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); margin-bottom: 20px;">
+              <img src="cid:qrcode" alt="QR Code" style="width: 220px; height: 220px; display: block;" />
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+              <span style="background-color: #fef3c7; color: #92400e; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 1px solid #fde68a;">
+                COUNCIL: ${delegate.committee || "GENERAL ASSEMBLY"}
+              </span>
+            </div>
+
+            <div style="font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #64748b; background-color: #f1f5f9; padding: 10px; border-radius: 6px; display: inline-block; border: 1px solid #e2e8f0;">
+              AUTH_TOKEN: ${delegate.qr_token}
+            </div>
+          </div>
+
+          <div style="background-color: #fff9eb; border-left: 4px solid #f2c45f; padding: 15px; margin-bottom: 25px;">
+            <p style="color: #854d0e; font-size: 13px; margin: 0; line-height: 1.5;">
+              <strong>Pro-tip:</strong> Please have this QR code ready on your mobile device (or printed) upon arrival at the venue to ensure a seamless check-in experience.
+            </p>
+          </div>
+
+          <p style="color: #666666; font-size: 14px; line-height: 1.6;">
+            If you have any questions regarding your registration or require special assistance, please reach out to our Delegate Affairs department.
+          </p>
+        </div>
+
+        <div style="background-color: #fafafa; padding: 25px 30px; text-align: center; border-top: 1px solid #eeeeee;">
+          <p style="color: #999999; font-size: 12px; margin: 0;">
+            &copy; ${new Date().getFullYear()} International Global Affairs Council. All rights reserved.
+          </p>
+        </div>
       </div>
     `;
 
-    // 5. Send the Email
-    await transporter.sendMail({
-      from: `"IGAC Secretariat" <${process.env.GMAIL_EMAIL}>`,
+    // 5. Send the Email via Resend
+    const { data: resendData, error: resendErr } = await resend.emails.send({
+      from: "IGAC Secretariat <delegateaffairs@osayeed.me>", // Updated to official department email
       to: delegate.email,
-      subject: "Your Official Delegate QR Code Check-in Credentials",
+      subject: `[CONFIRMED] Official Delegate Credentials for ${delegate.full_name}`,
       html: htmlTemplate,
       attachments: [
         {
-          filename: "qr-code.png",
+          filename: "delegate-qr.png",
           content: base64Data,
-          encoding: "base64",
-          contentType: "image/png",
           cid: "qrcode", // Used in html template
         },
       ],
     });
+
+    if (resendErr) {
+      // Revert status to FAILED so it can be retried
+      await supabase
+        .from("delegates")
+        .update({ mail_status: "FAILED" })
+        .eq("id", delegateId);
+      
+      return NextResponse.json({ error: resendErr.message }, { status: 500 });
+    }
 
     // 6. Complete Transaction & Update DB
     await supabase
@@ -131,7 +149,11 @@ export async function POST(req: Request) {
       })
       .eq("id", delegateId);
 
-    return NextResponse.json({ success: true, message: "Email dispatched successfully" });
+    return NextResponse.json({ 
+      success: true, 
+      message: "Email dispatched successfully via Resend",
+      id: resendData?.id 
+    });
   } catch (error: any) {
     console.error("Mail Dispatch Error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });

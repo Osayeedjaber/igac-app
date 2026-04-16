@@ -4,6 +4,7 @@ import HeroSection, { GoldenDust } from "./components/HeroSection";
 import MarqueeSection from "./components/MarqueeSection";
 import InfoSection from "./components/InfoSection";
 import SecGenMessageSection from "./components/SecGenMessageSection";
+import PlenaryPresidentMessageSection from "./components/PlenaryPresidentMessageSection";
 import RegistrationSection from "./components/RegistrationSection";
 import UpdatesSection from "./components/UpdatesSection";
 import CommitteesSection from "./components/CommitteesSection";
@@ -34,6 +35,7 @@ export default function ImunMainClient({ settings }: { settings: SiteSettingsPub
                 <InfoSection settings={settings} />
                 <RegistrationSection settings={settings} />
                 <SecGenMessageSection />
+                <PlenaryPresidentMessageSection />
                 <UpdatesSection />
                 <CommitteesSection settings={settings} />
                 <VenueSection settings={settings} />

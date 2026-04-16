@@ -145,34 +145,83 @@ export function CommandCenterTab() {
         {/* Right Column: Live Data Feed */}
         <div className="lg:col-span-2 space-y-6">
           
-          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg shadow-black/50">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center">
               <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none" />
               <Users className="w-8 h-8 text-blue-500 opacity-20 absolute right-4 top-4" />
               <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 z-10">Total Database</span>
-              <span className="font-mono text-4xl font-black text-white tracking-tight z-10">{stats ? stats.totalDelegates : '--'}</span>
+              <span className="font-mono text-3xl font-black text-white tracking-tight z-10">{stats ? stats.totalDelegates : '--'}</span>
             </div>
             
             <div className="bg-zinc-900 border border-emerald-900/40 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.05)]">
               <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-emerald-500/10 to-transparent pointer-events-none" />
-              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5 whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Registrations
               </span>
-              <span className="font-mono text-4xl font-black text-emerald-50 tracking-tight z-10">
+              <span className="font-mono text-3xl font-black text-emerald-50 tracking-tight z-10">
                 {stats ? stats.registeredCount : '--'}
               </span>
             </div>
 
             <div className="bg-zinc-900 border border-purple-900/40 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.05)]">
               <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-purple-500/10 to-transparent pointer-events-none" />
-              <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5 whitespace-nowrap">
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
                 In Committees
               </span>
-              <span className="font-mono text-4xl font-black text-purple-50 tracking-tight z-10">
+              <span className="font-mono text-3xl font-black text-purple-50 tracking-tight z-10">
                 {stats ? stats.committeeCount : '--'}
               </span>
+            </div>
+
+            <div className="bg-zinc-900 border border-rose-900/40 rounded-xl p-6 relative overflow-hidden flex flex-col items-center justify-center shadow-[0_0_30px_rgba(244,63,94,0.05)]">
+              <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-rose-500/10 to-transparent pointer-events-none" />
+              <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1 z-10 flex items-center gap-1.5 whitespace-nowrap">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                Exited Venue
+              </span>
+              <span className="font-mono text-3xl font-black text-rose-50 tracking-tight z-10">
+                {stats ? stats.exitCount : '--'}
+              </span>
+            </div>
+          </div>
+
+          {/* CHECK-IN VELOCITY CHART */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg shadow-black/50">
+            <h3 className="text-lg font-bold mb-6 text-zinc-100 flex items-center gap-2 border-b border-white/5 pb-4">
+              <Activity className="w-5 h-5 text-emerald-500" />
+              Check-in Velocity (Flow Rate/Hour)
+            </h3>
+            
+            <div className="h-48 flex items-end gap-2 px-4 pb-8 relative group">
+              {stats && stats.velocityData && stats.velocityData.length > 0 ? (
+                stats.velocityData.map((d: any, i: number) => {
+                  const maxCount = Math.max(...stats.velocityData.map((x: any) => x.count));
+                  const height = maxCount > 0 ? (d.count / maxCount) * 100 : 0;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center group/bar relative">
+                      <div 
+                        style={{ height: `${height}%`, minHeight: '4px' }}
+                        className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-sm transition-all duration-500 group-hover/bar:from-emerald-400 group-hover/bar:to-emerald-300 relative"
+                      >
+                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-black text-[10px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none whitespace-nowrap shadow-lg">
+                            {d.count} Scans
+                         </div>
+                      </div>
+                      <span className="absolute -bottom-6 text-[10px] font-bold text-zinc-500 group-hover/bar:text-zinc-300 transition-colors uppercase tracking-tighter">
+                        {d.time}
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-600 italic bg-black/20 rounded-lg border border-white/5 p-4 border-dashed">
+                  <BarChart3 className="w-8 h-8 mb-2 opacity-20" />
+                  <p className="text-xs uppercase font-bold tracking-widest opacity-50">Waiting for live signal activity...</p>
+                </div>
+              )}
             </div>
           </div>
 

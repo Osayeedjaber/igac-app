@@ -68,6 +68,43 @@ export async function GET(request: NextRequest) {
       exportData.site_settings = settings || null;
     }
 
+    if (type === "delegates" || type === "all") {
+      const { data: delegates } = await supabase
+        .from("delegates")
+        .select("*")
+        .order("created_at", { ascending: false });
+      exportData.delegates = delegates || [];
+    }
+
+    if (type === "scans" || type === "all") {
+      const { data: scans } = await supabase
+        .from("delegate_checkins")
+        .select(`
+          id,
+          scanned_at,
+          checkpoint,
+          day,
+          scan_type,
+          delegate:delegate_id ( full_name, email, committee, country ),
+          scanned_by:scanned_by_id ( full_name )
+        `)
+        .order("scanned_at", { ascending: false });
+      
+      // Flatten for CSV
+      exportData.scans = (scans || []).map((s: any) => ({
+        id: s.id,
+        scanned_at: s.scanned_at,
+        day: s.day,
+        checkpoint: s.checkpoint,
+        scan_type: s.scan_type,
+        delegate_name: s.delegate?.full_name,
+        delegate_email: s.delegate?.email,
+        committee: s.delegate?.committee,
+        country: s.delegate?.country,
+        scanned_by: s.scanned_by?.full_name
+      }));
+    }
+
     if (format === "csv") {
       // Convert to CSV format
       let csvContent = "";
@@ -92,6 +129,32 @@ export async function GET(request: NextRequest) {
           csvContent += "--- EVENTS ---\n";
           csvContent += headers.join(",") + "\n";
           events.forEach((row) => {
+            csvContent += headers.map((h) => escapeCsvField(row[h])).join(",") + "\n";
+          });
+          csvContent += "\n";
+        }
+      }
+
+      if (type === "delegates" || type === "all") {
+        const delegates = exportData.delegates as Record<string, unknown>[];
+        if (delegates && delegates.length > 0) {
+          const headers = Object.keys(delegates[0]);
+          csvContent += "--- DELEGATES ---\n";
+          csvContent += headers.join(",") + "\n";
+          delegates.forEach((row) => {
+            csvContent += headers.map((h) => escapeCsvField(row[h])).join(",") + "\n";
+          });
+          csvContent += "\n";
+        }
+      }
+
+      if (type === "scans" || type === "all") {
+        const scans = exportData.scans as Record<string, unknown>[];
+        if (scans && scans.length > 0) {
+          const headers = Object.keys(scans[0]);
+          csvContent += "--- SCAN LOGS ---\n";
+          csvContent += headers.join(",") + "\n";
+          scans.forEach((row) => {
             csvContent += headers.map((h) => escapeCsvField(row[h])).join(",") + "\n";
           });
         }
