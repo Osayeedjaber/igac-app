@@ -42,11 +42,7 @@ export async function POST(req: Request) {
       .update({ mail_status: "PROCESSING" })
       .eq("id", delegateId);
 
-    // 2. Build Mail Template
-    // (Template remains the same as before)
-    });
-
-    // 3. Generate QR Code Server-Side (High Error Correction for better scanning)
+    // 2. Generate QR Code Server-Side (High Error Correction for better scanning)
     const qrDataUri = await QRCode.toDataURL(delegate.qr_token, {
       margin: 2,
       width: 400,
