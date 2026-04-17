@@ -145,7 +145,7 @@ export default function PortalScan() {
       };
       
       pollData();
-      const iv = setInterval(pollData, 120000); // Poll every 2 minutes instead of 15 seconds to prevent Supabase data overload
+      const iv = setInterval(pollData, 10000); // Poll every 10 seconds for faster global override response
     return () => clearInterval(iv);
   }, [router]);
 

@@ -307,7 +307,6 @@ export async function deleteSecretariatAccountAction(id: string) {
 }
 
 export async function fetchSystemSettingsAction() {
-  await checkAuth();
   const supabase = getServiceSupabase();
   const { data, error } = await supabase.from('system_settings').select('*').eq('id', 1).single();
   if (error && error.code !== 'PGRST116') throw new Error(error.message);
