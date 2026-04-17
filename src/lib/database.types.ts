@@ -22,6 +22,7 @@ export interface Database {
           last_mail_error: string | null
           created_at: string
           qr_token_image?: string | null
+          transaction_id?: string | null
         }
         Insert: {
           id?: string
@@ -34,6 +35,8 @@ export interface Database {
           allocation_mail_sent_at?: string | null
           last_mail_error?: string | null
           created_at?: string
+          qr_token_image?: string | null
+          transaction_id?: string | null
         }
         Update: {
           id?: string
@@ -46,6 +49,8 @@ export interface Database {
           allocation_mail_sent_at?: string | null
           last_mail_error?: string | null
           created_at?: string
+          qr_token_image?: string | null
+          transaction_id?: string | null
         }
       }
       delegate_checkins: {
