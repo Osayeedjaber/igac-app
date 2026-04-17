@@ -47,7 +47,7 @@ type Delegate = Database["public"]["Tables"]["delegates"]["Row"];
 
 export default function PortalScan() {
   const router = useRouter();
-  const [day, setDay] = useState<1 | 2 | 3>(3); // Set to 3 as default as per active context
+  const [day, setDay] = useState<1 | 2 | 3>(1); // Default to Day 1
   const [checkpoint, setCheckpoint] = useState<"registration" | "committee">("registration");
   const [globalCheckpoint, setGlobalCheckpoint] = useState<"registration" | "committee" | "both">("both");
   const [scanType, setScanType] = useState<"ENTRY" | "EXIT">("ENTRY");
@@ -59,6 +59,9 @@ export default function PortalScan() {
   const [scannedPayload, setScannedPayload] = useState<string | null>(null);
   const [scanHistory, setScanHistory] = useState<any[]>([]);
 
+  const [activeDay, setActiveDay] = useState(1);
+  const [offlineDelegates, setOfflineDelegates] = useState<Delegate[]>([]);
+  const [isRefreshingCache, setIsRefreshingCache] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [editorNameInput, setEditorNameInput] = useState("");
   const [editForm, setEditForm] = useState({ full_name: "", committee: "", country: "" });
@@ -69,10 +72,38 @@ export default function PortalScan() {
 
   const [secretariatId, setSecretariatId] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [scannerKey, setScannerKey] = useState(0);
+
+  // Cache Delegates locally for faster offline lookups and resilience
+  const fetchDelegatesToCache = async () => {
+    setIsRefreshingCache(true);
+    try {
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from("delegates")
+        .select("*");
+      if (error) throw error;
+      if (data) {
+        setOfflineDelegates(data);
+        localStorage.setItem("scanner_delegate_cache", JSON.stringify(data));
+      }
+    } catch (e: any) {
+      console.error("Cache refresh failed:", e);
+      // fallback to old cache if network drops
+      const cached = localStorage.getItem("scanner_delegate_cache");
+      if (cached) setOfflineDelegates(JSON.parse(cached));
+    }
+    setIsRefreshingCache(false);
+  };
 
   useEffect(() => {
     const supabase = getSupabase();
-    
+
+    // Load static cache first to prevent lag
+    const cached = localStorage.getItem("scanner_delegate_cache");
+    if (cached) setOfflineDelegates(JSON.parse(cached));
+    fetchDelegatesToCache();
+
     // Authenticate the active Secretariat member
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
@@ -87,10 +118,19 @@ export default function PortalScan() {
       try {
         const res = await fetchSystemSettingsAction();
         if (res) {
-          setDay(res.active_day as 1 | 2 | 3);
+          const activeDay = res.active_day as 1 | 2 | 3;
+          setDay(activeDay);
           const cp = res.active_checkpoint as "registration" | "committee" | "both";
           setGlobalCheckpoint(cp);
-          if (cp !== "both") {
+          
+          if (res.active_scan_mode) {
+             setScanType(res.active_scan_mode as "ENTRY" | "EXIT");
+          }
+          
+          // Force checkpoint to registration if it's Day 3 and committee was active
+          if (activeDay === 3) {
+            setCheckpoint("registration");
+          } else if (cp !== "both") {
             setCheckpoint(cp);
           }
         }
@@ -98,18 +138,27 @@ export default function PortalScan() {
         console.error(e);
       }
     };
-    loadSettings();
-    const iv = setInterval(loadSettings, 10000);
-
+      
+      const pollData = () => {
+        loadSettings();
+        fetchDelegatesToCache();
+      };
+      
+      pollData();
+      const iv = setInterval(pollData, 120000); // Poll every 2 minutes instead of 15 seconds to prevent Supabase data overload
     return () => clearInterval(iv);
   }, [router]);
 
+  const [isProcessingScan, setIsProcessingScan] = useState(false);
+
   const handleScan = async (detectedCodes: IDetectedBarcode[]) => {
-    if (!secretariatId || scanState !== "idle") return;
+    if (!secretariatId || scanState !== "idle" || isProcessingScan) return;
 
     // Only take the first text value it detected
     const qrToken = detectedCodes[0]?.rawValue;
     if (!qrToken) return;
+
+    setIsProcessingScan(true);
 
     const safePayload = String(qrToken).trim();
     setScannedPayload(safePayload);
@@ -298,6 +347,7 @@ export default function PortalScan() {
       setShowTransaction(false);
       setTransPassword("");
       setTransError("");
+      setIsProcessingScan(false); // Unblock the camera hardware lock
       // Don't erase the message immediately so they can still read what just happened
     }, 3000);
   };
@@ -346,39 +396,41 @@ export default function PortalScan() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-emerald-400/80">Checkpoint Location</label>
             <div className={`grid ${globalCheckpoint === 'both' ? 'grid-cols-2' : 'grid-cols-2 opacity-80 pointer-events-none'} gap-2`}>
-              {["registration", "committee"].map((cp) => (
-                <button
-                  key={cp}
-                  onClick={() => globalCheckpoint === 'both' ? setCheckpoint(cp as "registration" | "committee") : null}
-                  className={`rounded-xl py-2 text-sm font-bold capitalize transition-all ${checkpoint === cp ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" : "bg-black/50 text-blue-400/50 border border-blue-500/20"}`}
-                >
-                  {cp}
-                </button>
-              ))}
+              {["registration", "committee"].map((cp) => {
+                const isDisabled = day === 3 && cp === "committee";
+                return (
+                  <button
+                    key={cp}
+                    disabled={isDisabled}
+                    onClick={() => {
+                      if (globalCheckpoint === 'both' && !isDisabled) {
+                        setCheckpoint(cp as "registration" | "committee");
+                      }
+                    }}
+                    className={`rounded-xl py-2 text-sm font-bold capitalize transition-all ${
+                      checkpoint === cp 
+                        ? "bg-blue-500 text-white shadow-lg shadow-blue-500/20" 
+                        : isDisabled
+                          ? "bg-zinc-900 text-zinc-700 border border-zinc-800 cursor-not-allowed"
+                          : "bg-black/50 text-blue-400/50 border border-blue-500/20"
+                    }`}
+                  >
+                    {cp} {isDisabled && "(N/A)"}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-emerald-400/80">Scan Mode</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 opacity-80 pointer-events-none">
               <button
-                onClick={() => {
-                  if (scanType === "ENTRY") return;
-                  if (window.confirm("Switch to ENTRY mode? Ensure you are at an entry point.")) {
-                    setScanType("ENTRY");
-                  }
-                }}
                 className={`rounded-xl py-2 text-sm font-bold transition-all ${scanType === "ENTRY" ? "bg-green-500 text-green-950 shadow-lg shadow-green-500/20" : "bg-black/50 text-green-500/50 border border-green-500/20"}`}
               >
                 ENTRY
               </button>
               <button
-                onClick={() => {
-                  if (scanType === "EXIT") return;
-                  if (window.confirm("Switch to EXIT mode? This will record delegates leaving the room.")) {
-                    setScanType("EXIT");
-                  }
-                }}
                 className={`rounded-xl py-2 text-sm font-bold transition-all ${scanType === "EXIT" ? "bg-rose-500 text-rose-950 shadow-lg shadow-rose-500/20" : "bg-black/50 text-rose-500/50 border border-rose-500/20"}`}
               >
                 EXIT
@@ -403,6 +455,7 @@ export default function PortalScan() {
                </div>
             ) : scanState === "idle" || scanState.startsWith("action") || scanState.startsWith("edit") || scanState === "success" || scanState === "error" ? (
               <Scanner 
+                key={scannerKey}
                 onScan={handleScan}
                 onError={(err: any) => {
                   setScanState("error");
@@ -420,11 +473,12 @@ export default function PortalScan() {
           
           {/* Overlay Status Feeds */}
           {scanState === "action_required" && lastScanned && (
-             <div className="absolute inset-0 z-10 flex flex-col justify-center bg-blue-950/95 backdrop-blur-md p-6 animate-in fade-in zoom-in duration-200 overflow-y-auto border border-blue-500/20">
-               <div className="flex flex-col items-center">
-                 <CheckCircle2 className="h-12 w-12 text-blue-400 mb-2 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)]" />
-                 <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Review Required</h2>
-               </div>
+             <div className="absolute inset-0 z-10 flex flex-col bg-blue-950/95 backdrop-blur-md p-6 animate-in fade-in zoom-in duration-200 overflow-y-auto border border-blue-500/20">
+               <div className="m-auto w-full flex flex-col">
+                 <div className="flex flex-col items-center">
+                   <CheckCircle2 className="h-12 w-12 text-blue-400 mb-2 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)]" />
+                   <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Review Required</h2>
+                 </div>
                
                <div className="mt-4 w-full rounded-2xl bg-black/60 p-5 text-left border border-white/10 shadow-2xl relative overflow-hidden">
                  <div className="absolute top-0 right-0 p-3 opacity-10 pointer-events-none">
@@ -451,21 +505,23 @@ export default function PortalScan() {
                     Financial Data Override
                  </h3>
                  {!showTransaction ? (
-                    <form onSubmit={handleRevealTransaction} className="flex gap-2 relative z-10">
-                      <input 
-                        type="password" 
-                        placeholder="Admin Key..." 
-                        className="w-full bg-black/50 border border-emerald-900/50 rounded px-3 py-2 text-white text-sm outline-none focus:border-emerald-500 transition font-mono"
-                        value={transPassword}
-                        onChange={e => setTransPassword(e.target.value)}
-                      />
-                      <button type="submit" className="bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-400 text-sm font-bold px-4 py-2 rounded transition whitespace-nowrap uppercase tracking-wider">
-                        Reveal
-                      </button>
-                      {transError && <span className="text-[10px] text-red-500 absolute -bottom-5 left-0 uppercase font-bold">{transError}</span>}
+                    <form onSubmit={handleRevealTransaction} className="flex flex-col gap-2 relative z-10 w-full">
+                      <div className="flex gap-2 w-full">
+                        <input 
+                          type="password" 
+                          placeholder="Admin Key..." 
+                          className="w-full bg-black/50 border border-emerald-900/50 rounded px-3 py-2 text-white text-sm outline-none focus:border-emerald-500 transition font-mono min-w-0"
+                          value={transPassword}
+                          onChange={e => setTransPassword(e.target.value)}
+                        />
+                        <button type="submit" className="bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-400 text-sm font-bold px-4 py-2 rounded transition whitespace-nowrap uppercase tracking-wider flex-shrink-0">
+                          Reveal
+                        </button>
+                      </div>
+                      {transError && <span className="text-[10px] text-red-500 uppercase font-bold">{transError}</span>}
                     </form>
                  ) : (
-                    <div className="bg-black/50 border border-emerald-500/30 p-3 rounded font-mono text-emerald-400 text-sm break-all flex items-center shadow-[0_0_15px_rgba(16,185,129,0.1)] z-10 relative">
+                    <div className="bg-black/50 border border-emerald-500/30 p-3 rounded font-mono text-emerald-400 text-sm break-all block w-full overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.1)] z-10 relative">
                       {lastScanned.transaction_id || 'NO_TRANSACTION_ID_FOUND'}
                     </div>
                  )}
@@ -483,6 +539,7 @@ export default function PortalScan() {
                      Abort
                    </button>
                  </div>
+               </div>
                </div>
              </div>
           )}

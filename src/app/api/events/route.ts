@@ -5,15 +5,22 @@ import { verifyAdmin, unauthorizedResponse } from "@/lib/admin-auth";
 export const dynamic = "force-dynamic";
 
 // GET — Fetch all events (public)
-export async function GET() {
+export async function GET(request: NextRequest) {
   if (!isSupabaseReady()) {
     return NextResponse.json({ error: "Database not configured" }, { status: 503 });
   }
+
+  // Basic pagination
+  const { searchParams } = new URL(request.url);
+  const limit = Math.min(parseInt(searchParams.get("limit") || "100"), 100);
+  const offset = parseInt(searchParams.get("offset") || "0");
+
   const supabase = getServiceSupabase();
   const { data, error } = await supabase
     .from("events")
     .select("*")
-    .order("sort_order", { ascending: true });
+    .order("sort_order", { ascending: true })
+    .range(offset, offset + limit - 1);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -15,10 +15,15 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status");
 
-  let query = supabase
-    .from("contact_submissions")
-    .select("*")
-    .order("created_at", { ascending: false });
+    // Add basic pagination to prevent fetching everything at once
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
+    const offset = parseInt(searchParams.get("offset") || "0");
+
+    let query = supabase
+      .from("contact_submissions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
   if (status && status !== "all") {
     query = query.eq("status", status);
@@ -52,8 +57,21 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(mapped);
 }
 
-// POST — Create a new contact submission (public)
+// In-memory simplistic rate limiter
+const RATE_LIMIT_MAP = new Map<string, number>();
+
+// POST â€” Create a new contact submission (public)
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for") || "unknown";
+  const now = Date.now();
+  if (RATE_LIMIT_MAP.has(ip) && (now - RATE_LIMIT_MAP.get(ip)!) < 60000) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a minute." }, 
+      { status: 429 }
+    );
+  }
+  RATE_LIMIT_MAP.set(ip, now);
+
   if (!isSupabaseReady()) {
     return NextResponse.json({ error: "Database not configured" }, { status: 503 });
   }

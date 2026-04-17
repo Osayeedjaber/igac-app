@@ -32,6 +32,9 @@ export function getSupabase() {
 // Server-side Supabase (uses service role key, bypasses RLS)
 let _serviceSupabase: SupabaseClient | null = null;
 export function getServiceSupabase() {
+  if (typeof window !== "undefined") {
+    throw new Error("SECURITY ALERT: getServiceSupabase() cannot be called from the client browser.");
+  }
   if (!isSupabaseReady()) {
     throw new Error("Supabase is not configured. Please set environment variables.");
   }

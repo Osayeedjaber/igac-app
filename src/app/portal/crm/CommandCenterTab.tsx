@@ -7,6 +7,7 @@ import { Loader2, Radio, CheckSquare, Settings2, BarChart3, Users, Clock, Activi
 export function CommandCenterTab() {
   const [activeDay, setActiveDay] = useState(1);
   const [activeCheckpoint, setActiveCheckpoint] = useState('registration');
+  const [activeScanMode, setActiveScanMode] = useState('ENTRY');
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   
@@ -31,6 +32,9 @@ export function CommandCenterTab() {
       if (data) {
         setActiveDay(data.active_day);
         setActiveCheckpoint(data.active_checkpoint);
+        if (data.active_scan_mode) {
+          setActiveScanMode(data.active_scan_mode);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -52,7 +56,11 @@ export function CommandCenterTab() {
     setIsSaving(true);
     setSaveMessage('');
     try {
-      await updateSystemSettingsAction({ active_day: activeDay, active_checkpoint: activeCheckpoint });
+      await updateSystemSettingsAction({ 
+        active_day: activeDay, 
+        active_checkpoint: activeCheckpoint,
+        active_scan_mode: activeScanMode
+      });
       setSaveMessage('Global Network Synced');
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (e: any) {
@@ -120,6 +128,25 @@ export function CommandCenterTab() {
                     }`}
                   >
                     {cp}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Global Scan Mode</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['ENTRY', 'EXIT'].map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setActiveScanMode(mode)}
+                    className={`py-2 rounded-lg font-bold text-[11px] uppercase tracking-wider transition-all ${
+                      activeScanMode === mode 
+                      ? mode === 'ENTRY' ? 'bg-green-500 text-green-950 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-rose-500 text-rose-950 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
+                      : 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:bg-zinc-700'
+                    }`}
+                  >
+                    {mode}
                   </button>
                 ))}
               </div>

@@ -36,5 +36,39 @@ export default async function Page() {
         getEvents(),
         getSiteStats(),
     ]);
-    return <EventsPage events={events} stats={siteStats} />;
+
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "IGAC - International Global Affairs Council Conferences",
+        "description": "The archives of prestigious Model UN conferences and regional events hosted by IGAC.",
+        "itemListElement": events.map((event, index) => ({
+            "@type": "ListItem",
+            "position": index + 1,
+            "item": {
+                "@type": "Event",
+                "name": event.title,
+                "description": event.description,
+                "image": event.image,
+                "location": {
+                    "@type": "Place",
+                    "name": event.location
+                },
+                "organizer": {
+                    "@type": "Organization",
+                    "name": "International Global Affairs Council"
+                }
+            }
+        }))
+    };
+
+    return (
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <EventsPage events={events} stats={siteStats} />;
+        </>
+    );
 }

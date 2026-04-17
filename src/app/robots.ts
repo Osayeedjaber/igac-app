@@ -6,9 +6,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin/", "/api/"],
+        disallow: ["/admin/", "/api/", "/portal/scan"],
       },
     ],
     sitemap: "https://igac.info/sitemap.xml",
+    host: "https://igac.info",
   };
 }

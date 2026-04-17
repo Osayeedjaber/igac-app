@@ -33,5 +33,38 @@ export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function Page() {
     const teamData = await getTeamMembers();
-    return <TeamPage data={teamData} />;
+    
+    // Schema markup for our team members
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "IGAC - International Global Affairs Council Leadership Team",
+        "description": "The dedicated team of diplomats and executives behind IGAC and Imperial MUN.",
+        "itemListElement": [
+            ...teamData.governingBody.map((member, index) => ({
+                "@type": "ListItem",
+                "position": index + 1,
+                "item": {
+                    "@type": "Person",
+                    "name": member.name,
+                    "jobTitle": member.role,
+                    "image": member.image,
+                    "affiliation": {
+                        "@type": "Organization",
+                        "name": "International Global Affairs Council"
+                    }
+                }
+            }))
+        ]
+    };
+
+    return (
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <TeamPage data={teamData} />
+        </>
+    );
 }

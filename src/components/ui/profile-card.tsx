@@ -88,7 +88,7 @@ export function ProfileCard({ name, role, department, image, quote, socials, del
             <div className="absolute inset-0" style={{ transform: "translateZ(-20px)" }}>
                 <Image
                     src={image || "/logo.png"}
-                    alt={name || 'Team Member'}
+                    alt={`${name} - ${role}${department ? ` (${department})` : ""} at IGAC`}
                     fill
                     className={cn("object-cover object-top transition-transform duration-1000 group-hover:scale-110", imageClassName)}
                     sizes="(max-width: 768px) 100vw, 33vw"

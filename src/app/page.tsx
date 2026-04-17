@@ -76,6 +76,38 @@ export default async function Home() {
     getSiteStats(),
   ]);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "IGAC - International Global Affairs Council",
+    "alternateName": "IGAC MUN",
+    "url": "https://igac.info",
+    "logo": "https://igac.info/logo.png",
+    "description": "Architecting the next era of global leadership. IGAC is South East Asia's premier Model UN platform, empowering thousands of youth through high-stakes diplomacy.",
+    "sameAs": [
+      "https://facebook.com/igacmun",
+      "https://instagram.com/igacmun",
+      "https://linkedin.com/company/igacmun"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "contact@igac.info",
+      "contactType": "General Affairs"
+    },
+    "founder": [
+      {
+        "@type": "Person",
+        "name": "Al Rashidus Sabru Farabi",
+        "jobTitle": "President"
+      }
+    ],
+    "brand": {
+        "@type": "Brand",
+        "name": "Imperial Model United Nations",
+        "alternateName": "IMUN"
+    }
+  };
+
   // Serialize for client components
   const governingBody = teamData.governingBody.map(m => ({
     name: m.name,
@@ -118,6 +150,10 @@ export default async function Home() {
 
   return (
     <main className="flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Hero />
       <ImunPreview />
       <About />

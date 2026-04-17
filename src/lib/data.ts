@@ -66,8 +66,8 @@ export async function getSiteSettings(): Promise<SiteSettingsPublic> {
   };
   if (isSupabaseReady()) {
     try {
-      const { getServiceSupabase } = await import("@/lib/supabase");
-      const supabase = getServiceSupabase();
+      const { getSupabase } = await import("@/lib/supabase");
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from("site_settings")
         .select("*")
@@ -87,8 +87,8 @@ export async function getSiteStats(): Promise<SiteStats> {
   };
   if (isSupabaseReady()) {
     try {
-      const { getServiceSupabase } = await import("@/lib/supabase");
-      const supabase = getServiceSupabase();
+      const { getSupabase } = await import("@/lib/supabase");
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from("site_settings")
         .select("stat_total_events, stat_total_delegates, stat_years_active")
@@ -154,8 +154,8 @@ export async function getTeamMembers(): Promise<{
 }> {
   if (isSupabaseReady()) {
     try {
-      const { getServiceSupabase } = await import("@/lib/supabase");
-      const supabase = getServiceSupabase();
+      const { getSupabase } = await import("@/lib/supabase");
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from("team_members")
         .select("*")
@@ -304,8 +304,8 @@ export async function getTeamMemberBySlug(slug: string): Promise<TeamMemberRow |
 
   if (isSupabaseReady()) {
     try {
-      const { getServiceSupabase } = await import("@/lib/supabase");
-      const supabase = getServiceSupabase();
+      const { getSupabase } = await import("@/lib/supabase");
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from("team_members")
         .select("*");
@@ -355,8 +355,8 @@ export async function getAllTeamSlugs(): Promise<string[]> {
 
   if (isSupabaseReady()) {
     try {
-      const { getServiceSupabase } = await import("@/lib/supabase");
-      const supabase = getServiceSupabase();
+      const { getSupabase } = await import("@/lib/supabase");
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from("team_members")
         .select("name")
@@ -386,8 +386,8 @@ export async function getAllTeamSlugs(): Promise<string[]> {
 export async function getEvents(): Promise<EventRow[]> {
   if (isSupabaseReady()) {
     try {
-      const { getServiceSupabase } = await import("@/lib/supabase");
-      const supabase = getServiceSupabase();
+      const { getSupabase } = await import("@/lib/supabase");
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from("events")
         .select("*")

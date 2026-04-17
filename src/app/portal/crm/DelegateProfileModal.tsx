@@ -13,7 +13,7 @@ export function DelegateProfileModal({ delegate: initialDelegate, onClose }: { d
   const [isEditing, setIsEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editForm, setEditForm] = useState({
-    full_name: '', email: '', country: '', committee: '', transaction_id: ''
+    full_name: '', email: '', country: '', committee: '', transaction_id: '', mail_status: ''
   });
   const [editLogsForm, setEditLogsForm] = useState<any[]>([]);
 
@@ -79,7 +79,8 @@ export function DelegateProfileModal({ delegate: initialDelegate, onClose }: { d
       email: delegate.email,
       country: delegate.country || '',
       committee: delegate.committee || '',
-      transaction_id: delegate.transaction_id || ''
+      transaction_id: delegate.transaction_id || '',
+      mail_status: delegate.mail_status || 'PENDING'
     });
     setEditLogsForm(checkins.map(c => ({ id: c.id, checkpoint: c.checkpoint, day: c.day })));
     setIsEditing(true);
@@ -203,15 +204,32 @@ export function DelegateProfileModal({ delegate: initialDelegate, onClose }: { d
                     </>
                   )}
                   <p className="text-sm"><span className="text-zinc-500 w-24 inline-block">Status:</span>
-                    <span className="text-zinc-200 font-medium">
-                      {delegate.mail_status === 'SENT' ? (
-                        <span className="text-emerald-400 flex items-center gap-1 inline-flex">
-                          <CheckCircle2 className="w-3 h-3" /> Sent ({format(new Date(delegate.allocation_mail_sent_at || Date.now()), 'MMM d, h:mm a')})
-                        </span>
-                      ) : (
-                        <span className="text-yellow-500">Pending</span>
-                      )}
-                    </span>
+                    {!isEditing ? (
+                      <span className="text-zinc-200 font-medium">
+                        {delegate.mail_status === 'SENT' ? (
+                          <span className="text-emerald-400 flex items-center gap-1 inline-flex">
+                            <CheckCircle2 className="w-3 h-3" /> Sent ({format(new Date(delegate.allocation_mail_sent_at || Date.now()), 'MMM d, h:mm a')})
+                          </span>
+                        ) : delegate.mail_status === 'PROCESSING' ? (
+                          <span className="text-sky-400 animate-pulse">Processing...</span>
+                        ) : delegate.mail_status === 'FAILED' ? (
+                          <span className="text-rose-400">Failed</span>
+                        ) : (
+                          <span className="text-yellow-500">Pending</span>
+                        )}
+                      </span>
+                    ) : (
+                      <select 
+                        value={editForm.mail_status} 
+                        onChange={e => setEditForm({...editForm, mail_status: e.target.value})} 
+                        className="bg-black border border-zinc-700 text-white rounded px-2 py-1 outline-none focus:border-sky-500"
+                      >
+                        <option value="PENDING">Pending</option>
+                        <option value="PROCESSING">Processing</option>
+                        <option value="SENT">Sent</option>
+                        <option value="FAILED">Failed</option>
+                      </select>
+                    )}
                   </p>
                 </div>
               </div>

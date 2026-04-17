@@ -1,23 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySessionToken } from "@/lib/session";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Protect /portal/crm
   if (pathname.startsWith('/portal/crm')) {
     if (pathname === '/portal/crm/login') return NextResponse.next();
     
     const token = request.cookies.get('crm_session');
-    if (!token || token.value !== 'authenticated') {
-      return NextResponse.redirect(new URL('/portal/crm/login', request.url));
+    if (!token || !(await verifySessionToken(token.value))) {
+      return NextResponse.redirect(new URL('/portal/crm/login', request.url));  
     }
   }
 
   // Protect /api/admin/mail
   if (pathname.startsWith('/api/admin/mail')) {
     const token = request.cookies.get('crm_session');
-    if (!token || token.value !== 'authenticated') {
-      return new NextResponse(JSON.stringify({ error: 'Unauthorized via Middleware' }), {
+    if (!token || !(await verifySessionToken(token.value))) {
+      return new NextResponse(JSON.stringify({ error: 'Unauthorized via Proxy' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });

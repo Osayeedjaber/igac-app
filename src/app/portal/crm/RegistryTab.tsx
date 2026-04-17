@@ -11,6 +11,7 @@ import {
   Info,
   Download,
   Plus,
+  AlertCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fetchDelegatesAction, addDelegateAction } from "./actions";
@@ -25,6 +26,7 @@ type Delegate = {
   qr_token: string;
   allocation_mail_sent_at: string | null;
   mail_status: "PENDING" | "PROCESSING" | "SENT" | "FAILED" | null;
+  last_mail_error?: string | null;
   transaction_id?: string | null;
 };
 
@@ -32,6 +34,14 @@ export function RegistryTab() {
   const [delegates, setDelegates] = useState<Delegate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newDelegate, setNewDelegate] = useState({
     full_name: "",
@@ -52,6 +62,17 @@ export function RegistryTab() {
     failed: number;
   } | null>(null);
 
+  // Auto-refresh when bulk sending is active
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isBulkSending) {
+      interval = setInterval(() => {
+        fetchDelegates(true);
+      }, 5000); // Quietly refresh background data every 5s
+    }
+    return () => clearInterval(interval);
+  }, [isBulkSending]);
+
   // Warn admin if they try to close tab while bulk sending
   useEffect(() => {
     if (!isBulkSending) return;
@@ -68,30 +89,34 @@ export function RegistryTab() {
     fetchDelegates();
   }, []);
 
-  const fetchDelegates = async () => {
-    setLoading(true);
+  const fetchDelegates = async (quiet = false) => {
+    if (!quiet) setLoading(true);
+    else setIsRefreshing(true);
+    
     try {
       const data = await fetchDelegatesAction();
       if (data) setDelegates(data as Delegate[]);
     } catch (err) {
       console.error(err);
-      alert("Failed to load delegates. RLS may be active or session invalid.");
+      if (!quiet) alert("Failed to load delegates. RLS may be active or session invalid.");
+    } finally {
+      if (!quiet) setLoading(false);
+      else setIsRefreshing(false);
     }
-    setLoading(false);
   };
 
   const handleBulkSend = async () => {
     const pendingDelegates = delegates.filter(
-      (d) => d.mail_status === "PENDING" || d.mail_status === null,
+      (d) => d.mail_status === "PENDING" || d.mail_status === null || d.mail_status === "FAILED",
     );
     if (pendingDelegates.length === 0) {
-      alert("No pending mails to send.");
+      alert("No pending or failed mails to send.");
       return;
     }
 
     if (
       !window.confirm(
-        `Are you sure you want to initiate sending ${pendingDelegates.length} emails? Keep this tab open.`,
+        `Are you sure you want to initiate sending ${pendingDelegates.length} emails? This will also retry any PREVIOUSLY FAILED mails. Keep this tab open.`,
       )
     )
       return;
@@ -99,25 +124,35 @@ export function RegistryTab() {
     setIsBulkSending(true);
     setBulkProgress({ total: pendingDelegates.length, sent: 0, failed: 0 });
 
-    const CHUNK_SIZE = 5;
+    const CHUNK_SIZE = 1; // Process 1 at a time to prevent Vercel Serverless Out of Memory crashes
     for (let i = 0; i < pendingDelegates.length; i += CHUNK_SIZE) {
+      if (!isBulkSending) break; // Allow manual abort if we add a stop button later
+
       const chunk = pendingDelegates.slice(i, i + CHUNK_SIZE);
 
       await Promise.all(
         chunk.map(async (delegate) => {
           try {
+            // Update local state to PROCESSING immediately for UI feel
+            setDelegates(prev => prev.map(d => d.id === delegate.id ? { ...d, mail_status: 'PROCESSING' } : d));
+
             const res = await fetch("/api/admin/mail", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ delegateId: delegate.id }),
             });
+            const data = await res.json().catch(() => null);
+
             if (!res.ok) {
-              const data = await res.json().catch(() => null);
               throw new Error(data?.error || "Send failed");
             }
+            
             setBulkProgress((prev) =>
               prev ? { ...prev, sent: prev.sent + 1 } : null,
             );
+            
+            // Update local state to SENT
+            setDelegates(prev => prev.map(d => d.id === delegate.id ? { ...d, mail_status: 'SENT', allocation_mail_sent_at: new Date().toISOString() } : d));
           } catch (err: any) {
             console.error(
               `Failed to send to ${delegate.email}: ${err.message}`,
@@ -125,6 +160,9 @@ export function RegistryTab() {
             setBulkProgress((prev) =>
               prev ? { ...prev, failed: prev.failed + 1 } : null,
             );
+            
+            // Update local state to FAILED with error reason
+            setDelegates(prev => prev.map(d => d.id === delegate.id ? { ...d, mail_status: 'FAILED', last_mail_error: err.message } : d));
           }
         }),
       );
@@ -135,9 +173,9 @@ export function RegistryTab() {
       }
     }
 
-    alert(`Bulk send finished!`);
-    setBulkProgress(null);
+    alert(`Bulk send finished! Sent: ${bulkProgress?.sent}, Failed: ${bulkProgress?.failed}`);
     setIsBulkSending(false);
+    setBulkProgress(null);
     await fetchDelegates();
   };
 
@@ -180,13 +218,34 @@ export function RegistryTab() {
     document.body.removeChild(link);
   };
 
+  const resetZombies = async () => {
+    const zombies = delegates.filter(d => d.mail_status === "PROCESSING");
+    if (zombies.length === 0) {
+      alert("No delegates currently stuck in processing state.");
+      return;
+    }
+    if (!window.confirm(`Reset ${zombies.length} stuck emails from PROCESSING to PENDING? Use this if your browser crashed or internet dropped midway during a bulk send.`)) return;
+    
+    setLoading(true);
+    try {
+      // In production, an RPC or backend action for bulk update is better. Using map for small scale.
+      const { editDelegateAction } = await import("./actions");
+      await Promise.all(zombies.map(d => editDelegateAction(d.id, { mail_status: "PENDING" })));
+      alert(`Reset ${zombies.length} delegates successfully.`);
+      await fetchDelegates();
+    } catch (e: any) {
+      alert("Error resetting: " + e.message);
+    }
+    setLoading(false);
+  };
+
   const filteredDelegates = delegates.filter(
     (d) =>
-      d.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      d.email.toLowerCase().includes(search.toLowerCase()) ||
-      (d.committee || "").toLowerCase().includes(search.toLowerCase()) ||
-      d.qr_token.toLowerCase().includes(search.toLowerCase()),
-  );
+      d.full_name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      d.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      (d.committee || "").toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      d.qr_token.toLowerCase().includes(debouncedSearch.toLowerCase()),
+  ).slice(0, 100); // Display only top 100 to prevent DOM lag on massive rosters
 
   const handleAddDelegate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -258,7 +317,7 @@ export function RegistryTab() {
             <Plus className="w-4 h-4" /> Add Delegate
           </button>
           <button
-            onClick={fetchDelegates}
+            onClick={() => fetchDelegates()}
             className="px-4 py-2 text-sm font-medium transition border rounded-md border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
           >
             Refresh
@@ -268,6 +327,14 @@ export function RegistryTab() {
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition border rounded-md border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
           >
             <Download className="w-4 h-4" /> Export CSV
+          </button>
+
+          <button
+            onClick={resetZombies}
+            title="Reset Stuck Processing States"
+            className="flex items-center justify-center p-2 transition bg-orange-600 hover:bg-orange-500 rounded-md border border-orange-500"
+          >
+             <AlertCircle className="w-4 h-4 text-white" />
           </button>
 
           <button
@@ -386,6 +453,7 @@ export function RegistryTab() {
                     <StatusBadge
                       status={del.mail_status}
                       sentAt={del.allocation_mail_sent_at}
+                      errorReason={del.last_mail_error}
                     />
                   </td>
                   <td className="px-6 py-3 text-right">
@@ -544,9 +612,11 @@ export function RegistryTab() {
 function StatusBadge({
   status,
   sentAt,
+  errorReason,
 }: {
   status: Delegate["mail_status"];
   sentAt: string | null;
+  errorReason?: string | null;
 }) {
   switch (status) {
     case "SENT":
@@ -563,9 +633,14 @@ function StatusBadge({
       );
     case "FAILED":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-rose-950/30 border border-rose-900/50 rounded-full text-xs font-medium text-rose-400">
+        <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-rose-950/30 border border-rose-900/50 rounded-full text-xs font-medium text-rose-400 relative group">
           <Circle className="w-3 h-3 fill-rose-900" /> Error
-        </span>
+          {errorReason && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 px-2 py-1 bg-zinc-800 text-white text-[10px] rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition pointer-events-none z-10 text-center leading-tight">
+              {errorReason}
+            </div>
+          )}
+        </div>
       );
     case "PROCESSING":
       return (

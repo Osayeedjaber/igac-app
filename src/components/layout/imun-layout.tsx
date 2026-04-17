@@ -48,9 +48,16 @@ export function ImunNavbar() {
                     
                     {/* Left: Branding */}
                     <div className="flex items-center">
-                        <Link href="/imun" className="flex items-center gap-3 group">
+                        <Link href="/imun" className="flex items-center gap-3 group" aria-label="Imperial MUN II Home">
                             <div className="relative w-8 h-8 md:w-10 md:h-10 transition-transform group-hover:scale-105">
-                                <Image src="/Imun/Logo/Golden.png" alt="IMUN Logo" fill className="object-contain drop-shadow-[0_0_10px_rgba(242,196,95,0.4)]" />
+                                <Image 
+                                    src="/Imun/Logo/Golden.png" 
+                                    alt="Imperial MUN II Logo" 
+                                    fill 
+                                    className="object-contain drop-shadow-[0_0_10px_rgba(242,196,95,0.4)]"
+                                    sizes="(max-width: 640px) 32px, 40px"
+                                    priority
+                                />
                             </div>
                             <div className="hidden sm:flex flex-col">
                                 <span className="font-primary text-[#f2c45f] text-sm md:text-lg tracking-[0.2em] font-bold leading-none">
@@ -61,11 +68,12 @@ export function ImunNavbar() {
                     </div>
 
                     {/* Center: Desktop Nav */}
-                    <nav className="hidden lg:flex items-center gap-8 bg-[#151515]/60 backdrop-blur-md px-8 py-3 rounded-full border border-white/5">
+                    <nav className="hidden lg:flex items-center gap-8 bg-[#151515]/60 backdrop-blur-md px-8 py-3 rounded-full border border-white/5" aria-label="Main Navigation">
                         {NAV_LINKS.map((link) => (
                             <Link 
                                 key={link.name} 
                                 href={link.href}
+                                aria-current={pathname === link.href ? "page" : undefined}
                                 className={`font-primary text-xs uppercase tracking-widest transition-all duration-300 hover:text-[#f2c45f] ${
                                     pathname === link.href ? "text-[#f2c45f] font-bold" : "text-neutral-400"
                                 }`}
@@ -80,6 +88,7 @@ export function ImunNavbar() {
                         <Link 
                             href="/"
                             className="hidden xl:flex items-center gap-2 text-neutral-500 hover:text-[#f2c45f] transition-colors"
+                            aria-label="Back to IGAC Home"
                         >
                             <ChevronLeft className="w-4 h-4" />
                             <span className="font-primary text-[10px] uppercase tracking-widest font-bold">
@@ -96,6 +105,8 @@ export function ImunNavbar() {
                         
                         <button 
                             onClick={() => setIsMobileMenuOpen(true)}
+                            aria-label="Open Menu"
+                            aria-expanded={isMobileMenuOpen}
                             className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full bg-[#151515] border border-white/10 hover:border-[#f2c45f]/50 transition-colors text-white"
                         >
                             <Menu className="w-5 h-5" />

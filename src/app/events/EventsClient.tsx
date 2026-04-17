@@ -104,10 +104,12 @@ export default function EventsPage({ events, stats }: EventsPageProps) {
                         {featuredEvent.image && (
                             <Image
                                 src={featuredEvent.image}
-                                alt={featuredEvent.title}
+                                alt={`Featured conference: ${featuredEvent.title} in ${featuredEvent.location}`}
                                 fill
                                 className="object-cover transition-transform duration-1000 group-hover:scale-105 opacity-50"
                                 priority
+                                sizes="100vw"
+                                quality={90}
                             />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
@@ -157,14 +159,16 @@ export default function EventsPage({ events, stats }: EventsPageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                     {sortedArchiveEvents.map((event, idx) => (
                         <Reveal key={idx} delay={idx * 0.05}>
-                            <div className="group rounded-[2rem] overflow-hidden bg-white/[0.02] border border-white/5 transition-all duration-300 hover:border-primary/30 hover:bg-white/[0.03]">
+                            <article className="group rounded-[2rem] overflow-hidden bg-white/[0.02] border border-white/5 transition-all duration-300 hover:border-primary/30 hover:bg-white/[0.03]">
                                 <div className="relative aspect-video overflow-hidden">
                                     {event.image && (
                                         <Image
                                             src={event.image}
-                                            alt={event.title}
+                                            alt={`Image of the ${event.title} conference held in ${event.location} in ${event.month} ${event.year}`}
                                             fill
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                             className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                            quality={85}
                                         />
                                     )}
                                     <div className="absolute top-4 left-4">
@@ -174,21 +178,23 @@ export default function EventsPage({ events, stats }: EventsPageProps) {
                                     </div>
                                 </div>
                                 <div className="p-8">
-                                    <div className="flex items-center justify-between mb-5">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-3.5 h-3.5 text-primary" />
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{event.month} {event.year}</span>
+                                    <header className="mb-4">
+                                        <div className="flex items-center justify-between mb-5">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+                                                <time dateTime={`${event.year}-${event.month}`} className="text-[10px] font-black uppercase tracking-widest text-white/60">{event.month} {event.year}</time>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-white/20 truncate max-w-[100px]">{event.location}</span>
                                         </div>
-                                        <span className="text-[10px] font-bold text-white/20 truncate max-w-[100px]">{event.location}</span>
-                                    </div>
-                                    <h4 className="text-2xl font-serif font-bold text-white mb-4 leading-tight group-hover:text-primary transition-colors">
-                                        {event.title}
-                                    </h4>
+                                        <h4 className="text-2xl font-serif font-bold text-white leading-tight group-hover:text-primary transition-colors">
+                                            {event.title}
+                                        </h4>
+                                    </header>
                                     <p className="text-sm text-muted-foreground line-clamp-3 font-medium leading-relaxed mb-6">
-                                        {event.description || event.subtitle || "A milestone event contributing to our growing legacy of international diplomatic excellence and youth leadership."}
+                                        {event.description || event.subtitle || `Detailed coverage of the ${event.title} organized by the International Global Affairs Council.`}
                                     </p>
 
-                                    <div className="flex gap-6 border-t border-white/5 pt-6 group-hover:border-primary/20 transition-colors">
+                                    <footer className="flex gap-6 border-t border-white/5 pt-6 group-hover:border-primary/20 transition-colors">
                                         <div className="flex flex-col">
                                             <span className="text-sm font-black text-white">{event.stats?.delegates || "300+"}</span>
                                             <span className="text-[8px] uppercase text-primary font-black tracking-widest">Delegates</span>
@@ -197,9 +203,9 @@ export default function EventsPage({ events, stats }: EventsPageProps) {
                                             <span className="text-sm font-black text-white">{event.stats?.committees || "5+"}</span>
                                             <span className="text-[8px] uppercase text-primary font-black tracking-widest">Committees</span>
                                         </div>
-                                    </div>
+                                    </footer>
                                 </div>
-                            </div>
+                            </article>
                         </Reveal>
                     ))}
                 </div>

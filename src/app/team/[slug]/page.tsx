@@ -50,8 +50,52 @@ export default async function TeamMemberPage({ params }: Props) {
         notFound();
     }
 
+    const jsonLd = [
+        {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            "name": member.name,
+            "jobTitle": member.role,
+            "image": member.image,
+            "description": member.description || `Meet ${member.name}, ${member.role} at IGAC.`,
+            "affiliation": {
+                "@type": "Organization",
+                "name": "International Global Affairs Council",
+                "url": "https://igac.info"
+            }
+        },
+        {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": "https://igac.info"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Team",
+                    "item": "https://igac.info/team"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": member.name,
+                    "item": `https://igac.info/team/${slug}`
+                }
+            ]
+        }
+    ];
+
     return (
         <main className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center py-20">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             {/* Background */}
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>

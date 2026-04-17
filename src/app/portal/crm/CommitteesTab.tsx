@@ -10,6 +10,7 @@ import {
   XCircle,
   ChevronRight,
   Search,
+  Download,
 } from "lucide-react";
 import { DelegateProfileModal } from "./DelegateProfileModal";
 
@@ -27,6 +28,56 @@ export function CommitteesTab() {
   const [activeCommittee, setActiveCommittee] = useState<string | null>(null);
   const [selectedDelegate, setSelectedDelegate] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const exportToCSV = (committeeName: string, delegates: any[]) => {
+    // Determine check-in status for sorting
+    const getCheckinMetrics = (delId: string) => {
+      const d1Reg = rawCheckins.some(c => c.delegate_id === delId && c.day === 1 && c.checkpoint === 'registration');
+      const d1Com = rawCheckins.some(c => c.delegate_id === delId && c.day === 1 && c.checkpoint === 'committee');
+      const d2Reg = rawCheckins.some(c => c.delegate_id === delId && c.day === 2 && c.checkpoint === 'registration');
+      const d2Com = rawCheckins.some(c => c.delegate_id === delId && c.day === 2 && c.checkpoint === 'committee');
+      const d3Reg = rawCheckins.some(c => c.delegate_id === delId && c.day === 3 && c.checkpoint === 'registration');
+      
+      const score = (d1Reg ? 1 : 0) + (d1Com ? 1 : 0) + (d2Reg ? 1 : 0) + (d2Com ? 1 : 0) + (d3Reg ? 1 : 0);
+      return { d1Reg, d1Com, d2Reg, d2Com, d3Reg, score };
+    };
+
+    // Prepare data with status and score for sorting
+    const data = delegates.map(d => ({
+      ...d,
+      ...getCheckinMetrics(d.id)
+    }));
+
+    // Sort: highest score (most checked in) first
+    data.sort((a, b) => b.score - a.score);
+
+    const headers = ["Full Name", "Email", "Country", "Committee", "Day 1 Registration", "Day 1 Committee", "Day 2 Registration", "Day 2 Committee", "Day 3 Registration"];
+    const rows = data.map(d => [
+      d.full_name,
+      d.email,
+      d.country || "",
+      d.committee || "",
+      d.d1Reg ? "YES" : "NO",
+      d.d1Com ? "YES" : "NO",
+      d.d2Reg ? "YES" : "NO",
+      d.d2Com ? "YES" : "NO",
+      d.d3Reg ? "YES" : "NO"
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(r => r.map(cell => `"${cell}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Committee_${committeeName.replace(/\s+/g, '_')}_Export.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -110,83 +161,101 @@ export function CommitteesTab() {
             </p>
           </div>
           
-          <div className="w-full md:w-auto relative">
-            <Search className="absolute w-4 h-4 text-zinc-500 left-3 top-3" />
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-64 bg-zinc-900 border border-zinc-800 text-white rounded-lg pl-10 pr-4 py-2 outline-none focus:border-sky-500 transition shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-            />
+          <div className="w-full md:w-auto flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 md:flex-none">
+              <Search className="absolute w-4 h-4 text-zinc-500 left-3 top-3" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full md:w-64 bg-zinc-900 border border-zinc-800 text-white rounded-lg pl-10 pr-4 py-2 outline-none focus:border-sky-500 transition shadow-lg"
+              />
+            </div>
+            <button
+              onClick={() => exportToCSV(activeCommittee, committeeDelegates)}
+              className="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-lg"
+            >
+              <Download className="w-4 h-4" /> Export CSV
+            </button>
           </div>
         </div>
 
         <div className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 shadow-lg">
-          <table className="w-full text-left text-sm text-zinc-300">
-            <thead className="bg-zinc-900 text-zinc-500 border-b border-zinc-800 uppercase text-xs tracking-wider">
-              <tr>
-                <th className="px-6 py-4">Delegate Profile</th>
-                <th className="px-6 py-4">Country</th>
-                <th className="px-6 py-4">Check-in Status</th>
-                <th className="px-6 py-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/50">
-              {committeeDelegates.map((del) => {
-                const delCheckins = rawCheckins.filter(
-                  (c) => c.delegate_id === del.id,
-                );
-                const isCheckedIn = delCheckins.length > 0;
-
-                return (
-                  <tr
-                    key={del.id}
-                    className="hover:bg-zinc-800/50 transition cursor-pointer group"
-                    onClick={() => setSelectedDelegate(del)}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-white group-hover:text-sky-300 transition">
-                        {del.full_name}
-                      </div>
-                      <div className="text-zinc-500 text-xs mt-1">
-                        {del.email}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">{del.country || "-"}</td>
-                    <td className="px-6 py-4">
-                      {isCheckedIn ? (
-                        <div className="flex flex-col gap-1 items-start">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle2 className="w-3 h-3" /> Checked In
-                          </span>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-zinc-300">
+              <thead className="bg-zinc-900 text-zinc-500 border-b border-zinc-800 uppercase text-[10px] tracking-widest font-bold">
+                <tr>
+                  <th className="px-6 py-4">Delegate</th>
+                  <th className="px-4 py-4 text-center">D1 Reg</th>
+                  <th className="px-4 py-4 text-center">D1 Com</th>
+                  <th className="px-4 py-4 text-center">D2 Reg</th>
+                  <th className="px-4 py-4 text-center">D2 Com</th>
+                  <th className="px-4 py-4 text-center">D3 Reg</th>
+                  <th className="px-6 py-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/50">
+                {committeeDelegates.map((del) => {
+                  const delCheckins = rawCheckins.filter(c => c.delegate_id === del.id);
+                  
+                  const StatusIcon = ({ checked }: { checked: boolean }) => (
+                    <div className="flex justify-center">
+                      {checked ? (
+                        <div className="w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                         </div>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded bg-zinc-500/10 text-zinc-400 border border-zinc-500/20">
-                          <XCircle className="w-3 h-3" /> Not Present
-                        </span>
+                        <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700/50">
+                          <XCircle className="w-3.5 h-3.5 text-zinc-600" />
+                        </div>
                       )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="text-sky-400 opacity-0 group-hover:opacity-100 inline-flex items-center gap-1 text-xs font-semibold transition-opacity">
-                        View Profile <ChevronRight className="w-3 h-3" />
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-              {committeeDelegates.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-6 py-8 text-center text-zinc-500"
-                  >
-                    No delegates assigned.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    </div>
+                  );
+
+                  return (
+                    <tr
+                      key={del.id}
+                      className="hover:bg-zinc-800/50 transition cursor-pointer group"
+                      onClick={() => setSelectedDelegate(del)}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-white group-hover:text-sky-300 transition">
+                          {del.full_name}
+                        </div>
+                        <div className="text-zinc-500 text-[11px] truncate w-32 md:w-auto">
+                          {del.country || "Unknown Country"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusIcon checked={delCheckins.some(c => c.day === 1 && c.checkpoint === 'registration')} />
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusIcon checked={delCheckins.some(c => c.day === 1 && c.checkpoint === 'committee')} />
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusIcon checked={delCheckins.some(c => c.day === 2 && c.checkpoint === 'registration')} />
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusIcon checked={delCheckins.some(c => c.day === 2 && c.checkpoint === 'committee')} />
+                      </td>
+                      <td className="px-4 py-4">
+                        <StatusIcon checked={delCheckins.some(c => c.day === 3 && c.checkpoint === 'registration')} />
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-sky-400 transition ml-auto" />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {committeeDelegates.length === 0 && (
+            <div className="px-6 py-12 text-center text-zinc-500">
+              No delegates found in this category.
+            </div>
+          )}
         </div>
 
         {/* Modal view component wrapper reusing the global modal component! */}
