@@ -22,6 +22,7 @@ export interface Database {
           last_mail_error: string | null
           created_at: string
           qr_token_image?: string | null
+          institution?: string | null
           transaction_id?: string | null
         }
         Insert: {
@@ -36,6 +37,7 @@ export interface Database {
           last_mail_error?: string | null
           created_at?: string
           qr_token_image?: string | null
+          institution?: string | null
           transaction_id?: string | null
         }
         Update: {
@@ -50,6 +52,7 @@ export interface Database {
           last_mail_error?: string | null
           created_at?: string
           qr_token_image?: string | null
+          institution?: string | null
           transaction_id?: string | null
         }
       }

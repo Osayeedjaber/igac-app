@@ -3,19 +3,24 @@
 import { useState, useEffect } from "react";
 import {
   Search,
-  ChevronDown,
   CheckCircle2,
   Circle,
   Clock,
   Mail,
-  Info,
   Download,
   Plus,
   AlertCircle,
+  Eye,
+  Hash,
+  Globe,
+  Building2,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fetchDelegatesAction, addDelegateAction } from "./actions";
-import { DelegateProfileModal } from "./DelegateProfileModal";
+import DelegateProfileModal from "./DelegateProfileModal";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Delegate = {
   id: string;
@@ -27,15 +32,38 @@ type Delegate = {
   allocation_mail_sent_at: string | null;
   mail_status: "PENDING" | "PROCESSING" | "SENT" | "FAILED" | null;
   last_mail_error?: string | null;
+  institution?: string | null;
   transaction_id?: string | null;
 };
 
-export function RegistryTab() {
+export function RegistryTab({ initialSelectedId, onClearSelection }: { initialSelectedId?: string | null, onClearSelection?: () => void }) {
   const [delegates, setDelegates] = useState<Delegate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedDelegate, setSelectedDelegate] = useState<Delegate | null>(null);
+  const searchInputRef = typeof window !== 'undefined' ? (window as any)._searchInputRef : null;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        const input = document.getElementById('delegate-search-input');
+        input?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   
+  useEffect(() => {
+    if (initialSelectedId && delegates.length > 0) {
+      const del = delegates.find(d => d.id === initialSelectedId);
+      if (del) setSelectedDelegate(del);
+      onClearSelection?.();
+    }
+  }, [initialSelectedId, delegates, onClearSelection]);
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
@@ -49,11 +77,9 @@ export function RegistryTab() {
     country: "",
     committee: "",
     position: "Delegate",
+    institution: "",
     transaction_id: "",
   });
-  const [selectedDelegate, setSelectedDelegate] = useState<Delegate | null>(
-    null,
-  );
 
   const [isBulkSending, setIsBulkSending] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{
@@ -173,9 +199,15 @@ export function RegistryTab() {
       }
     }
 
-    alert(`Bulk send finished! Sent: ${bulkProgress?.sent}, Failed: ${bulkProgress?.failed}`);
+    // Capture the final counts before resetting state
+    setBulkProgress(prev => {
+      if (prev) {
+        alert(`Bulk send finished! Sent: ${prev.sent}, Failed: ${prev.failed}`);
+      }
+      return null;
+    });
+
     setIsBulkSending(false);
-    setBulkProgress(null);
     await fetchDelegates();
   };
 
@@ -245,7 +277,25 @@ export function RegistryTab() {
       d.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
       (d.committee || "").toLowerCase().includes(debouncedSearch.toLowerCase()) ||
       d.qr_token.toLowerCase().includes(debouncedSearch.toLowerCase()),
-  ).slice(0, 100); // Display only top 100 to prevent DOM lag on massive rosters
+  ).slice(0, 100);
+
+  const Highlight = ({ text, query }: { text: string; query: string }) => {
+    if (!query.trim()) return <>{text}</>;
+    const parts = text.split(new RegExp(`(${query})`, "gi"));
+    return (
+      <>
+        {parts.map((part, i) =>
+          part.toLowerCase() === query.toLowerCase() ? (
+            <mark key={i} className="bg-amber-500/30 text-amber-200 px-0.5 rounded shadow-[0_0_8px_rgba(245,158,11,0.2)] border-b border-amber-400/50">
+              {part}
+            </mark>
+          ) : (
+            part
+          )
+        )}
+      </>
+    );
+  };
 
   const handleAddDelegate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,6 +323,7 @@ export function RegistryTab() {
         country: newDelegate.country.trim() || null,
         committee: newDelegate.committee.trim() || null,
         position: newDelegate.position.trim(),
+        institution: newDelegate.institution.trim() || null,
         transaction_id: newDelegate.transaction_id.trim() || null,
         qr_token: qrToken,
         mail_status: "PENDING",
@@ -286,6 +337,7 @@ export function RegistryTab() {
         country: "",
         committee: "",
         position: "Delegate",
+        institution: "",
         transaction_id: "",
       });
     } catch (err: any) {
@@ -297,115 +349,137 @@ export function RegistryTab() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Registry Header */}
+      <div className="flex flex-col gap-1">
+        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+          Delegate Registry
+          <span className="text-[10px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded border border-zinc-700 font-mono uppercase tracking-widest">
+            {delegates.length} Total
+          </span>
+        </h2>
+        <p className="text-sm text-zinc-500">Manage, allocate, and dispatch credentials to regional delegates.</p>
+      </div>
+
       {/* Action Bar */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Delegate Registry</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              const url = `/api/export?format=csv&type=all`;
-              window.open(url, '_blank');
-            }}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition border rounded-md border-zinc-700 bg-white/5 hover:bg-white/10 text-zinc-300"
-          >
-            <Download className="w-4 h-4" /> Master Export (API)
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition border rounded-md border-zinc-700 bg-sky-600 hover:bg-sky-500 text-white"
-          >
-            <Plus className="w-4 h-4" /> Add Delegate
-          </button>
+      <div className="flex items-center justify-between bg-zinc-900/40 p-2 rounded-xl border border-zinc-800/50 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <div className="relative group">
+            <Search className="absolute w-4 h-4 text-zinc-500 left-3 top-1/2 -translate-y-1/2 group-focus-within:text-amber-500 transition-colors" />
+            <input
+              id="delegate-search-input"
+              type="text"
+              className="w-64 py-2 pl-10 pr-4 text-sm border rounded-lg bg-black/20 border-zinc-800 focus:outline-none focus:ring-1 focus:ring-amber-500/50 placeholder:text-zinc-600 transition-all font-medium"
+              placeholder="Filter (Ctrl+F)"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
           <button
             onClick={() => fetchDelegates()}
-            className="px-4 py-2 text-sm font-medium transition border rounded-md border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all"
+            title="Refresh Registry"
           >
-            Refresh
+            <AlertCircle className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
+        </div>
+
+        <div className="flex gap-2">
+          <div className="flex items-center bg-black/20 rounded-lg p-1 border border-zinc-800/50">
+            <button
+              onClick={handleExportCsv}
+              className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition hover:text-white text-zinc-400"
+            >
+              <Download className="w-3.5 h-3.5" /> CSV
+            </button>
+            <div className="w-px h-4 bg-zinc-800 mx-1" />
+            <button
+              onClick={() => window.open(`/api/export?format=csv&type=all`, '_blank')}
+              className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition hover:text-white text-zinc-400"
+            >
+              Master API
+            </button>
+          </div>
+
           <button
-            onClick={handleExportCsv}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition border rounded-md border-zinc-700 bg-zinc-800 hover:bg-zinc-700"
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest transition rounded-lg bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.3)]"
           >
-            <Download className="w-4 h-4" /> Export CSV
+            <Plus className="w-4 h-4" /> Add Profile
           </button>
 
           <button
             onClick={resetZombies}
             title="Reset Stuck Processing States"
-            className="flex items-center justify-center p-2 transition bg-orange-600 hover:bg-orange-500 rounded-md border border-orange-500"
+            className="p-2 transition bg-orange-500/10 hover:bg-orange-500/20 text-orange-500 rounded-lg border border-orange-500/20"
           >
-             <AlertCircle className="w-4 h-4 text-white" />
+             <AlertCircle className="w-4 h-4" />
           </button>
 
           <button
             onClick={handleBulkSend}
             disabled={isBulkSending}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-black transition bg-white rounded-md hover:bg-zinc-200 shadow-md disabled:bg-zinc-500 disabled:text-zinc-300 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-widest text-black transition bg-white rounded-lg hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-600"
           >
-            <Mail className="w-4 h-4" /> {isBulkSending ? `Dispatching... (${bulkProgress?.sent || 0}/${bulkProgress?.total || 0})` : "Send Pending Mails"}
+            <Mail className="w-4 h-4" /> 
+            {isBulkSending ? 'Dispatching...' : 'Fire Bulk Mails'}
           </button>
         </div>
       </div>
 
       {/* Bulk Sending Status Bar */}
       {isBulkSending && bulkProgress && (
-        <div className="bg-sky-900/30 border border-sky-500/50 rounded-lg p-4 flex items-center justify-between shadow-[0_0_15px_rgba(14,165,233,0.15)] animate-in slide-in-from-top-4">
-          <div className="flex items-center gap-3 text-sky-400 font-medium">
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-sky-500 border-t-transparent"></div>
-            Dispatching Delegate QR Codes via Gmail SMTP...
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center justify-between shadow-[0_0_20px_rgba(245,158,11,0.1)] animate-in slide-in-from-top-4 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-amber-500/30 border-t-amber-500"></div>
+              <div className="absolute inset-0 animate-ping rounded-full h-5 w-5 bg-amber-500/20"></div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-amber-500 font-bold text-xs uppercase tracking-widest">Dispatching Credentials</span>
+              <span className="text-[10px] text-zinc-500 font-medium">Communicating with SMTP relay...</span>
+            </div>
           </div>
-          <div className="flex items-center gap-6 text-sm font-mono">
-            <span className="text-zinc-400">Total: {bulkProgress.total}</span>
-            <span className="text-emerald-400">Sent: {bulkProgress.sent}</span>
-            <span className="text-rose-400">Failed: {bulkProgress.failed}</span>
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-tighter">Progress</span>
+              <span className="text-sm font-mono font-bold text-white">{(bulkProgress?.sent ?? 0) + (bulkProgress?.failed ?? 0)} <span className="text-zinc-600 text-[10px]">/ {bulkProgress?.total ?? 0}</span></span>
+            </div>
+            <div className="h-8 w-px bg-zinc-800" />
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-tighter italic">Success</span>
+              <span className="text-sm font-mono font-bold text-emerald-400">{bulkProgress?.sent ?? 0}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] text-rose-500 font-bold uppercase tracking-tighter italic">Failed</span>
+              <span className="text-sm font-mono font-bold text-rose-400">{bulkProgress?.failed ?? 0}</span>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Search Bar */}
-      <div className="flex gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute w-4 h-4 text-zinc-500 left-3 top-3" />
-          <input
-            type="text"
-            className="w-full py-2 pl-10 pr-4 text-sm border rounded-md bg-zinc-900 border-zinc-800 focus:outline-none focus:ring-1 focus:ring-sky-500 placeholder:text-zinc-600"
-            placeholder="Search by Name, Email, or Committee..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-
       {/* Table Area */}
-      <div className="border rounded-lg border-zinc-800 bg-zinc-900/50 overflow-hidden shadow-lg">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs uppercase bg-zinc-900 text-zinc-400 border-b border-zinc-800">
+      <div className="border rounded-xl border-zinc-800 bg-black/20 overflow-hidden shadow-2xl backdrop-blur-sm">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead className="bg-zinc-900/50 border-b border-zinc-800">
             <tr>
-              <th className="px-6 py-4 font-medium tracking-wider cursor-pointer hover:text-white">
-                Profile
-              </th>
-              <th className="px-6 py-4 font-medium tracking-wider">Contact</th>
-              <th className="px-6 py-4 font-medium tracking-wider">
-                Allocation
-              </th>
-              <th className="px-6 py-4 font-medium tracking-wider">
-                Mail Status
-              </th>
-              <th className="px-6 py-4 font-medium tracking-wider text-right">
-                Actions
-              </th>
+              <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Profile</th>
+              <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Contact & Info</th>
+              <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Allocation</th>
+              <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Mailed Status</th>
+              <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800/60">
+          <tbody className="divide-y divide-zinc-800/40">
             {loading ? (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="px-6 py-12 text-center text-zinc-500"
-                >
-                  Loading Delegates...
-                </td>
-              </tr>
+              Array.from({ length: 8 }).map((_, i) => (
+                <tr key={i}>
+                  <td className="px-6 py-4"><Skeleton className="h-4 w-32 mb-2" /><Skeleton className="h-3 w-20" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-4 w-48" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-6 w-24 rounded-full" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-4 w-20" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-8 w-8 ml-auto" /></td>
+                </tr>
+              ))
             ) : filteredDelegates.length === 0 ? (
               <tr>
                 <td
@@ -420,46 +494,85 @@ export function RegistryTab() {
                 <tr
                   key={del.id}
                   onClick={() => setSelectedDelegate(del)}
-                  className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
+                  className="hover:bg-zinc-800/40 transition-all group cursor-pointer border-l-2 border-transparent hover:border-amber-500/50 hover:shadow-[inset_0_0_20px_rgba(245,158,11,0.02)]"
                 >
-                  <td className="px-6 py-3">
-                    <div className="font-semibold text-white">
-                      {del.full_name}
-                    </div>
-                    <div className="text-xs font-mono mt-1 text-zinc-500">
-                      {del.qr_token}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700 group-hover:bg-amber-500/10 group-hover:border-amber-500/30 transition-all shadow-inner">
+                        <span className="text-[10px] font-bold text-zinc-500 group-hover:text-amber-500">
+                          {del.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-bold text-white group-hover:text-amber-500 transition-colors">
+                          <Highlight text={del.full_name} query={search} />
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-mono mt-0.5 text-zinc-500 group-hover:text-zinc-400">
+                          <Hash className="w-3 h-3 opacity-50" />
+                          <Highlight text={del.qr_token} query={search} />
+                        </div>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-3 text-zinc-400">{del.email}</td>
-                  <td className="px-6 py-3">
-                    <div className="flex gap-2 items-center">
-                      {del.committee ? (
-                        <span className="inline-flex items-center rounded-sm bg-indigo-400/10 px-2 py-1 text-xs font-medium text-indigo-400 ring-1 ring-inset ring-indigo-400/20">
-                          {del.committee}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 text-zinc-300">
+                        <Mail className="w-3 h-3 text-zinc-500" />
+                        <span className="text-sm font-medium">
+                          <Highlight text={del.email} query={search} />
                         </span>
-                      ) : (
-                        <span className="text-zinc-600 text-xs italic">
-                          Unallocated
-                        </span>
+                      </div>
+                      {del.institution && (
+                        <div className="flex items-center gap-2 text-[10px] text-zinc-500">
+                          <Building2 className="w-3 h-3" />
+                          <span className="truncate max-w-[150px]">{del.institution}</span>
+                        </div>
                       )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex gap-2 items-center">
+                        {del.committee ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-500/5 px-2 py-1 text-[10px] font-bold text-indigo-400 border border-indigo-500/20 group-hover:bg-indigo-500/10 transition-all">
+                            <span className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse" />
+                            <Highlight text={del.committee.toUpperCase()} query={search} />
+                          </span>
+                        ) : (
+                          <span className="text-zinc-600 text-[10px] font-bold uppercase tracking-wider italic flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            Unallocated
+                          </span>
+                        )}
+                      </div>
                       {del.country && (
-                        <span className="text-zinc-500 text-xs uppercase">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest pl-1">
+                          <Globe className="w-3 h-3 text-zinc-600" />
                           {del.country}
-                        </span>
+                        </div>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-4">
                     <StatusBadge
                       status={del.mail_status}
                       sentAt={del.allocation_mail_sent_at}
                       errorReason={del.last_mail_error}
                     />
                   </td>
-                  <td className="px-6 py-3 text-right">
-                    <button className="p-2 text-zinc-500 hover:text-sky-400 hover:bg-sky-500/10 rounded-md transition opacity-0 group-hover:opacity-100">
-                      <Info className="w-4 h-4" />
-                    </button>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                       <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedDelegate(del);
+                        }}
+                        className="p-2 text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                        title="View Details"
+                       >
+                        <Eye className="w-4 h-4" />
+                       </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -489,7 +602,7 @@ export function RegistryTab() {
                       full_name: e.target.value,
                     })
                   }
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 text-white outline-none focus:border-sky-500"
+                  className="w-full bg-black/50 border border-white/5 rounded p-2 text-white outline-none focus:border-amber-500"
                 />
               </div>
               <div>
@@ -503,7 +616,7 @@ export function RegistryTab() {
                   onChange={(e) =>
                     setNewDelegate({ ...newDelegate, email: e.target.value })
                   }
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 text-white outline-none focus:border-sky-500"
+                  className="w-full bg-black/50 border border-white/5 rounded p-2 text-white outline-none focus:border-amber-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -520,7 +633,7 @@ export function RegistryTab() {
                         committee: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 text-white outline-none focus:border-sky-500"
+                    className="w-full bg-black/50 border border-white/5 rounded p-2 text-white outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
@@ -536,27 +649,43 @@ export function RegistryTab() {
                         country: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 text-white outline-none focus:border-sky-500"
+                    className="w-full bg-black/50 border border-white/5 rounded p-2 text-white outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-400 mb-1">
-                    Transaction ID *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newDelegate.transaction_id}
-                    onChange={(e) =>
-                      setNewDelegate({
-                        ...newDelegate,
-                        transaction_id: e.target.value,
-                      })
-                    }
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 text-white outline-none focus:border-sky-500 font-mono"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">
+                      Institution (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newDelegate.institution}
+                      onChange={(e) =>
+                        setNewDelegate({
+                          ...newDelegate,
+                          institution: e.target.value,
+                        })
+                      }
+                      className="w-full bg-black/50 border border-white/5 rounded p-2 text-white outline-none focus:border-amber-500 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">
+                      Transaction ID (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newDelegate.transaction_id}
+                      onChange={(e) =>
+                        setNewDelegate({
+                          ...newDelegate,
+                          transaction_id: e.target.value,
+                        })
+                      }
+                      className="w-full bg-black/50 border border-white/5 rounded p-2 text-white outline-none focus:border-amber-500 font-mono"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-1">
@@ -570,13 +699,12 @@ export function RegistryTab() {
                         position: e.target.value,
                       })
                     }
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded p-2.5 text-sm text-white outline-none focus:border-sky-500"
+                    className="w-full bg-black/50 border border-white/5 rounded p-2.5 text-sm text-white outline-none focus:border-amber-500"
                   >
                     <option value="Delegate">Delegate</option>
                     <option value="Campus Ambassador">Campus Ambassador</option>
                   </select>
                 </div>
-              </div>
               <div className="flex gap-3 justify-end mt-6">
                 <button
                   type="button"
@@ -588,7 +716,7 @@ export function RegistryTab() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-sky-600 hover:bg-sky-500 rounded text-sm text-white font-medium"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 rounded-lg text-sm text-black font-black uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.2)]"
                 >
                   Create Delegate
                 </button>
@@ -621,22 +749,26 @@ function StatusBadge({
   switch (status) {
     case "SENT":
       return (
-        <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-emerald-950/30 border border-emerald-900/50 rounded-full text-xs font-medium text-emerald-400 relative group">
-          <CheckCircle2 className="w-3 h-3" /> Sent
-          {/* Tooltip */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[11px] font-bold text-emerald-400 relative group shadow-[0_0_10px_rgba(52,211,153,0.05)]">
+          <ShieldCheck className="w-3 h-3" />
+          <span>DISPATCHED</span>
           {sentAt && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2 py-1 bg-zinc-800 text-white text-[10px] rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition pointer-events-none z-10">
-              {format(new Date(sentAt), "MMM d, h:mm a")}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max px-2.5 py-1.5 bg-zinc-900 border border-zinc-800 text-white text-[10px] rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-10 backdrop-blur-md">
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-zinc-500 uppercase text-[8px] font-bold tracking-widest">Sent on</span>
+                <span className="font-mono">{format(new Date(sentAt), "MMM d, h:mm a")}</span>
+              </div>
             </div>
           )}
         </div>
       );
     case "FAILED":
       return (
-        <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-rose-950/30 border border-rose-900/50 rounded-full text-xs font-medium text-rose-400 relative group">
-          <Circle className="w-3 h-3 fill-rose-900" /> Error
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-500/10 border border-rose-500/20 rounded-full text-[11px] font-bold text-rose-400 relative group shadow-[0_0_10px_rgba(251,113,133,0.05)]">
+          <ShieldAlert className="w-3 h-3" />
+          <span>FAILED</span>
           {errorReason && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 px-2 py-1 bg-zinc-800 text-white text-[10px] rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition pointer-events-none z-10 text-center leading-tight">
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 px-2.5 py-1.5 bg-rose-950 border border-rose-900/50 text-rose-100 text-[10px] rounded-lg shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-10 backdrop-blur-md text-center leading-tight font-medium">
               {errorReason}
             </div>
           )}
@@ -644,15 +776,17 @@ function StatusBadge({
       );
     case "PROCESSING":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-sky-950/30 border border-sky-900/50 rounded-full text-xs font-medium text-sky-400 animate-pulse">
-          <Clock className="w-3 h-3" /> Processing...
-        </span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-[11px] font-bold text-amber-500 animate-pulse-slow shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+          <Clock className="w-3 h-3 animate-spin-slow" />
+          <span>PROCESSING</span>
+        </div>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-zinc-800/50 border border-zinc-700/50 rounded-full text-xs font-medium text-zinc-400">
-          <Circle className="w-3 h-3" /> Pending
-        </span>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-800/50 border border-zinc-700/50 rounded-full text-[11px] font-bold text-zinc-500 shadow-[0_0_10px_rgba(0,0,0,0.2)]">
+          <Circle className="w-3 h-3 fill-zinc-500/20" />
+          <span>PENDING</span>
+        </div>
       );
   }
 }

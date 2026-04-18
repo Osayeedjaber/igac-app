@@ -85,71 +85,75 @@ export function SecretariatTab() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Secretariat Operations</h2>
-          <p className="text-sm text-zinc-400">Manage portal access and view individual scanner metrics.</p>
+          <h2 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            <ShieldAlert className="w-6 h-6 text-amber-500" />
+            Secretariat Logistics
+          </h2>
+          <p className="text-sm text-zinc-400">Manage portal access credentials and live scanning parameters.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
         {/* Left Col - Create Form */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold mb-4 text-zinc-100 flex items-center gap-2">
-            {editingId ? <Edit2 className="w-5 h-5 text-blue-500" /> : <UserPlus className="w-5 h-5 text-yellow-500" />}
-            {editingId ? 'Edit Member Account' : 'New Member Account'}
+        <div className="bg-black/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[80px] pointer-events-none" />
+          <h3 className="text-sm font-black mb-6 text-zinc-100 flex items-center gap-2 uppercase tracking-widest border-b border-white/5 pb-4 relative z-10">
+            {editingId ? <Edit2 className="w-4 h-4 text-amber-500" /> : <UserPlus className="w-4 h-4 text-amber-500" />}
+            {editingId ? 'Edit Operative Account' : 'New Operative Account'}
           </h3>
           
           {message && (
-            <div className={`p-4 rounded-lg mb-6 flex items-start gap-3 border ${
+            <div className={`p-4 rounded-2xl mb-6 flex items-start gap-3 border shadow-inner relative z-10 ${
               message.type === 'success' 
                 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
             }`}>
               {message.type === 'success' && <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" />}
-              <div className="text-sm font-medium">{message.text}</div>
+              <div className="text-xs font-black uppercase tracking-wider">{message.text}</div>
             </div>
           )}
 
-          <form id="secretariat-form" onSubmit={handleSubmit} className="space-y-4">
+          <form id="secretariat-form" onSubmit={handleSubmit} className="space-y-5 relative z-10">
             <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Full Name</label>
+              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Full Name</label>
               <input 
                 type="text" 
                 name="fullName"
                 required
-                placeholder="e.g. Jane Doe"
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-all text-sm"
+                placeholder="Operative Name"
+                className="w-full bg-zinc-950/80 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/10 transition-all text-sm font-bold shadow-inner"
               />
             </div>
             
             <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Email Address</label>
+              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Email Address</label>
               <input 
                 type="email" 
                 name="email"
                 required
-                placeholder="jane.doe@igac.com"
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-all text-sm"
+                placeholder="operative@igac.com"
+                className="w-full bg-zinc-950/80 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/10 transition-all text-sm font-bold shadow-inner"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                {editingId ? 'New Password (Optional)' : 'Password'}
+              <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">
+                {editingId ? 'New Passcode (Optional)' : 'Passcode'}
               </label>
               <input 
                 type="password" 
                 name="password"
                 required={!editingId}
                 minLength={6}
-                placeholder={editingId ? "Leave blank to keep current" : "Must be at least 6 characters"}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-all text-sm"
+                placeholder={editingId ? "Leave blank to keep active" : "Minimum 6 characters"}
+                className="w-full bg-zinc-950/80 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/10 transition-all text-sm font-bold tracking-widest shadow-inner placeholder:tracking-normal"
               />
             </div>
 
-            <div className="flex gap-3 mt-4">
+            <div className="flex gap-3 mt-4 pt-4 border-t border-white/5">
               {editingId && (
                 <button 
                   type="button" 
@@ -158,7 +162,7 @@ export function SecretariatTab() {
                     setMessage(null);
                     (document.getElementById('secretariat-form') as HTMLFormElement)?.reset();
                   }}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3.5 px-4 rounded-xl transition-all"
+                  className="bg-zinc-900 border border-white/5 hover:border-rose-500/50 hover:bg-rose-500/10 hover:text-rose-400 text-zinc-300 font-black uppercase tracking-widest py-3.5 px-6 rounded-xl transition-all shadow-lg text-xs"
                 >
                   Cancel
                 </button>
@@ -166,78 +170,78 @@ export function SecretariatTab() {
               <button 
                 type="submit" 
                 disabled={isLoading}
-                className={`flex-1 font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] ${
-                  editingId ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-yellow-500 hover:bg-yellow-400 text-yellow-950 shadow-[0_0_20px_rgba(234,179,8,0.2)] hover:shadow-[0_0_25px_rgba(234,179,8,0.3)]'
+                className={`flex-1 text-xs font-black uppercase tracking-widest py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] ${
+                  editingId ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.2)]' : 'bg-amber-500 hover:bg-amber-400 text-black shadow-[0_0_20px_rgba(245,158,11,0.2)]'
                 }`}
               >
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" /> : editingId ? <Edit2 className="w-5 h-5 flex-shrink-0" /> : <UserPlus className="w-5 h-5 flex-shrink-0" />}
-                {isLoading ? (editingId ? 'Updating...' : 'Deploying Access...') : (editingId ? 'Update Account' : 'Deploy Access')}
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" /> : editingId ? <Edit2 className="w-4 h-4 flex-shrink-0" /> : <UserPlus className="w-4 h-4 flex-shrink-0" />}
+                {isLoading ? (editingId ? 'Updating...' : 'Deploying Access...') : (editingId ? 'Update Credentials' : 'Deploy Credentials')}
               </button>
             </div>
           </form>
         </div>
 
         {/* Right Col - List & Stats */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-lg flex flex-col h-full min-h-[400px]">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-blue-400" />
-              Active Roster
+        <div className="bg-black/60 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl flex flex-col h-full min-h-[400px]">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+            <h3 className="text-sm font-black uppercase tracking-widest text-zinc-100 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-emerald-500" />
+              Active Network Roster
             </h3>
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest bg-zinc-800 px-3 py-1 rounded-full">{secretariats.length} Members</span>
+            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-lg shadow-inner">{secretariats.length} Operatives</span>
           </div>
 
           <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-3 custom-scrollbar">
             {isFetching ? (
               <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-3">
-                <Loader2 className="w-6 h-6 animate-spin text-zinc-600" />
-                <span className="text-sm font-medium">Fetching roster...</span>
+                <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Synchronizing Roster...</span>
               </div>
             ) : secretariats.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-zinc-500 text-sm font-medium border-2 border-dashed border-zinc-800 rounded-xl p-6">
-                No secretariat members found.
+              <div className="flex flex-col items-center justify-center h-full text-zinc-500 text-[10px] uppercase font-black tracking-widest border-2 border-dashed border-white/5 bg-black/40 rounded-2xl p-6">
+                No active operatives in network.
               </div>
             ) : (
               secretariats.map((sec) => (
-                <div key={sec.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors group relative overflow-hidden">
+                <div key={sec.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-zinc-950/80 border border-white/5 hover:border-amber-500/30 transition-colors group relative overflow-hidden shadow-inner">
                   {/* subtle internal glow */}
-                  <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   
                   <div className="flex items-start gap-4 relative z-10">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex flex-shrink-0 items-center justify-center text-blue-400 font-bold shadow-inner uppercase">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-shrink-0 items-center justify-center text-amber-500 font-black shadow-inner uppercase shadow-[0_0_15px_rgba(245,158,11,0.1)]">
                       {sec.full_name.charAt(0)}{sec.full_name.split(' ')[1]?.[0] || ''}
                     </div>
                     <div>
                       <h4 className="font-bold text-white leading-tight mb-1">{sec.full_name}</h4>
-                      <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-wide">
-                        <span>User Role</span>
-                        <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
-                        <span className="text-blue-400">{sec.role || 'Terminal'}</span>
+                      <div className="flex items-center gap-2 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                        <span>Clearance</span>
+                        <span className="w-1 h-1 rounded-full bg-amber-500 shadow-[0_0_5px_rgba(245,158,11,0.8)]"></span>
+                        <span className="text-amber-500">{sec.role || 'Operative'}</span>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between sm:justify-end gap-6 bg-zinc-900 sm:bg-transparent p-3 sm:p-0 rounded-lg border border-zinc-800 sm:border-none ml-14 sm:ml-0 relative z-10">
-                    <div className="flex flex-col items-start sm:items-end mr-4">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Check-ins Logged</span>
-                      <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-md border border-emerald-500/20 shadow-[inset_0_0_10px_rgba(16,185,129,0.1)]">
-                        <Activity className="w-3.5 h-3.5" />
-                        <span className="font-mono font-bold text-sm tracking-wider">{sec.scan_count || 0}</span>
+                  <div className="flex items-center justify-between sm:justify-end gap-6 bg-black/40 sm:bg-transparent p-3 sm:p-0 rounded-xl border border-white/5 sm:border-none ml-14 sm:ml-0 relative z-10 shadow-inner sm:shadow-none">
+                    <div className="flex flex-col items-start sm:items-end mr-2">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500 mb-1">Scans Logged</span>
+                      <div className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 shadow-inner">
+                        <Activity className="w-3 h-3" />
+                        <span className="font-mono font-bold text-xs tracking-wider">{sec.scan_count || 0}</span>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-2">
                       <button 
                         onClick={() => startEdit(sec)}
-                        className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 p-2 rounded-lg border border-blue-500/20 transition-colors"
+                        className="bg-zinc-900 hover:bg-amber-500/20 text-zinc-400 hover:text-amber-400 p-2 rounded-lg border border-white/5 transition-colors"
                         title="Edit Account"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleDelete(sec.id, sec.full_name)}
-                        className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 p-2 rounded-lg border border-rose-500/20 transition-colors"
-                        title="Delete Account"
+                        className="bg-zinc-900 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 p-2 rounded-lg border border-white/5 transition-colors"
+                        title="Revoke Credentials"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

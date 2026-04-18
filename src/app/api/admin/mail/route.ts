@@ -38,9 +38,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Mail already processing for this delegate." }, { status: 429 });
     }
 
+    /* 
     if (delegate.mail_status === "SENT") {
       return NextResponse.json({ error: "Mail was already sent for this delegate." }, { status: 409 });
     }
+    */
 
     // Update status to PROCESSING
     await supabase
@@ -78,59 +80,25 @@ export async function POST(req: Request) {
     
     const svgOverlay = Buffer.from(`
       <svg width="1414" height="2000">
-        <style>
-          .base-text { 
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            fill: #000000;
-          }
-          .name { 
-            font-size: 38px; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-          }
-          .email { 
-            fill: #444444; 
-            font-size: 20px; 
-            font-weight: 400;
-          }
-          .label { 
-            font-size: 26px; 
-            font-weight: 700; 
-            text-transform: uppercase;
-          }
-          .id-code { 
-            font-family: 'Courier', 'Courier New', monospace;
-            font-size: 22px; 
-            font-weight: 700; 
-            fill: #000000;
-          }
-          .field-title {
-            font-size: 14px;
-            font-weight: 900;
-            fill: #666666;
-            text-transform: uppercase;
-          }
-        </style>
-        
         <!-- Field 1: Name -->
-        <text x="146" y="1555" class="base-text field-title">Name</text>
-        <text x="146" y="1585" class="base-text name">${delegate.full_name}</text>
+        <text x="146" y="1555" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="900" fill="#666666" text-transform="uppercase">Name</text>
+        <text x="146" y="1595" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="800" fill="#000000" text-transform="uppercase">${delegate.full_name}</text>
         
         <!-- Field 2: Email -->
-        <text x="146" y="1610" class="base-text field-title">Email</text>
-        <text x="146" y="1635" class="base-text email">${delegate.email.toLowerCase()}</text>
+        <text x="146" y="1625" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="900" fill="#666666" text-transform="uppercase">Email</text>
+        <text x="146" y="1650" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="400" fill="#444444">${delegate.email.toLowerCase()}</text>
         
         <!-- Field 3: Committee -->
-        <text x="146" y="1665" class="base-text field-title">Committee</text>
-        <text x="146" y="1690" class="base-text label">${delegate.committee?.toUpperCase() || "GA"}</text>
+        <text x="146" y="1685" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="900" fill="#666666" text-transform="uppercase">Committee</text>
+        <text x="146" y="1715" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" fill="#000000" text-transform="uppercase">${delegate.committee?.toUpperCase() || "GA"}</text>
         
         <!-- Field 4: Country -->
-        <text x="375" y="1665" class="base-text field-title">Country</text>
-        <text x="375" y="1690" class="base-text label">${delegate.country?.toUpperCase() || "N/A"}</text>
+        <text x="560" y="1685" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="900" fill="#666666" text-transform="uppercase">Country</text>
+        <text x="560" y="1715" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" fill="#000000" text-transform="uppercase">${delegate.country?.toUpperCase() || "N/A"}</text>
         
         <!-- Field 5: Identification Code -->
-        <text x="146" y="1720" class="base-text field-title">Identification Code</text>
-        <text x="146" y="1750" class="id-code">${delegate.qr_token.toUpperCase()}</text>
+        <text x="146" y="1745" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="900" fill="#666666" text-transform="uppercase">Identification Code</text>
+        <text x="146" y="1775" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#000000">${delegate.qr_token.toUpperCase()}</text>
       </svg>
     `);
 
@@ -226,7 +194,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: resendErr.message }, { status: 500 });
     }
 
-    // 6. Complete Transaction & Update DB
+    // 6. Complete Process & Update DB
     const { error: finalUpdateErr } = await supabase
       .from("delegates")
       .update({

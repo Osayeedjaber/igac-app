@@ -64,10 +64,9 @@ export default function PortalScan() {
   const [isRefreshingCache, setIsRefreshingCache] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [editorNameInput, setEditorNameInput] = useState("");
-  const [editForm, setEditForm] = useState({ full_name: "", committee: "", country: "" });
+  const [editForm, setEditForm] = useState({ full_name: "", committee: "", country: "", institution: "" });
   
   const [transPassword, setTransPassword] = useState("");
-  const [showTransaction, setShowTransaction] = useState(false);
   const [transError, setTransError] = useState("");
 
   const [secretariatId, setSecretariatId] = useState<string | null>(null);
@@ -164,7 +163,6 @@ export default function PortalScan() {
     const safePayload = String(qrToken).trim();
     setScannedPayload(safePayload);
     setLastScanned(null);
-    setShowTransaction(false);
     setTransPassword("");
     setTransError("");
 
@@ -252,16 +250,6 @@ export default function PortalScan() {
     });
   };
 
-  const handleRevealTransaction = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (transPassword === 'osayeed5889@') {
-      setShowTransaction(true);
-      setTransError('');
-    } else {
-      setTransError('INVALID KEY');
-    }
-  };
-
   const verifyEditPassword = () => {
     if (passwordInput !== "subaru5889@") {
       setScanState("error");
@@ -280,6 +268,7 @@ export default function PortalScan() {
       full_name: lastScanned?.full_name || "",
       committee: lastScanned?.committee || "",
       country: lastScanned?.country || "",
+      institution: lastScanned?.institution || "",
     });
     setScanState("editing");
     setPasswordInput("");
@@ -297,11 +286,13 @@ export default function PortalScan() {
         full_name: lastScanned.full_name,
         committee: lastScanned.committee,
         country: lastScanned.country,
+        institution: lastScanned.institution,
     };
     const newData = {
         full_name: editForm.full_name,
         committee: editForm.committee,
         country: editForm.country,
+        institution: editForm.institution,
     };
 
     // First update the delegate
@@ -345,7 +336,6 @@ export default function PortalScan() {
     // Reset scanner state after 3 seconds to allow reading the next person
     setTimeout(() => {
       setScanState("idle");
-      setShowTransaction(false);
       setTransPassword("");
       setTransError("");
       setIsProcessingScan(false); // Unblock the camera hardware lock
@@ -425,7 +415,7 @@ export default function PortalScan() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-emerald-400/80">Scan Mode</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 opacity-80 pointer-events-none">
               <button
                 onClick={() => setScanType("ENTRY")}
                 className={`rounded-xl py-2 text-sm font-bold transition-all ${scanType === "ENTRY" ? "bg-green-500 text-green-950 shadow-lg shadow-green-500/20" : "bg-black/50 text-green-500/50 border border-green-500/20"}`}
@@ -502,32 +492,14 @@ export default function PortalScan() {
                  </div>
                </div>
 
-               {/* Transaction Protection inside Active Scan */}
-               <div className="w-full mt-4 bg-zinc-900/80 border border-emerald-500/10 p-4 rounded-xl relative overflow-hidden">
-                 <h3 className="text-xs font-bold text-emerald-400 mb-3 uppercase tracking-wider flex items-center gap-2">
-                    Financial Data Override
+               {/* Institution Data */}
+               <div className="w-full mt-4 bg-zinc-900/80 border border-blue-500/10 p-4 rounded-xl relative overflow-hidden">
+                 <h3 className="text-xs font-bold text-blue-400 mb-3 uppercase tracking-wider flex items-center gap-2">
+                    Institution Information
                  </h3>
-                 {!showTransaction ? (
-                    <form onSubmit={handleRevealTransaction} className="flex flex-col gap-2 relative z-10 w-full">
-                      <div className="flex gap-2 w-full">
-                        <input 
-                          type="password" 
-                          placeholder="Admin Key..." 
-                          className="w-full bg-black/50 border border-emerald-900/50 rounded px-3 py-2 text-white text-sm outline-none focus:border-emerald-500 transition font-mono min-w-0"
-                          value={transPassword}
-                          onChange={e => setTransPassword(e.target.value)}
-                        />
-                        <button type="submit" className="bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-400 text-sm font-bold px-4 py-2 rounded transition whitespace-nowrap uppercase tracking-wider flex-shrink-0">
-                          Reveal
-                        </button>
-                      </div>
-                      {transError && <span className="text-[10px] text-red-500 uppercase font-bold">{transError}</span>}
-                    </form>
-                 ) : (
-                    <div className="bg-black/50 border border-emerald-500/30 p-3 rounded font-mono text-emerald-400 text-sm break-all block w-full overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.1)] z-10 relative">
-                      {lastScanned.transaction_id || 'NO_TRANSACTION_ID_FOUND'}
-                    </div>
-                 )}
+                 <div className="bg-black/50 border border-blue-500/30 p-3 rounded font-mono text-blue-400 text-sm break-all block w-full overflow-hidden shadow-[0_0_15px_rgba(59,130,246,0.1)] z-10 relative">
+                    {lastScanned.institution || 'NO_INSTITUTION_FOUND'}
+                 </div>
                </div>
 
                <div className="w-full mt-6 space-y-3">
@@ -538,7 +510,7 @@ export default function PortalScan() {
                    <button onClick={() => setScanState("edit_auth")} className="rounded-xl bg-black/50 py-3 font-semibold text-zinc-300 border border-white/10 hover:bg-white/10 transition-colors">
                      Edit Profile
                    </button>
-                   <button onClick={() => {setScanState("idle"); setShowTransaction(false); setTransPassword(""); setTransError(""); setMessage("");}} className="rounded-xl bg-rose-500/10 py-3 font-semibold text-rose-500 border border-rose-500/20 hover:bg-rose-500/20 transition-colors">
+                   <button onClick={() => {setScanState("idle"); setTransPassword(""); setTransError(""); setMessage("");}} className="rounded-xl bg-rose-500/10 py-3 font-semibold text-rose-500 border border-rose-500/20 hover:bg-rose-500/20 transition-colors">
                      Abort
                    </button>
                  </div>
@@ -603,6 +575,13 @@ export default function PortalScan() {
                     <label className="text-xs text-zinc-400 font-semibold uppercase ml-1">Country</label>
                     <input 
                       value={editForm.country} onChange={e => setEditForm({...editForm, country: e.target.value})}
+                      className="w-full mt-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-400 font-semibold uppercase ml-1">Institution</label>
+                    <input 
+                      value={editForm.institution} onChange={e => setEditForm({...editForm, institution: e.target.value})}
                       className="w-full mt-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-orange-500 outline-none"
                     />
                   </div>

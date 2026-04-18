@@ -15,6 +15,7 @@ import {
   CheckSquare
 } from 'lucide-react';
 import { addDelegatesBatchAction, fetchSystemSettingsAction, updateSystemSettingsAction, fetchDelegatesAction } from './actions';
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Mode = 'IMPORT' | 'EXPORT';
 type Source = 'CSV' | 'SHEETDB';
@@ -24,6 +25,7 @@ export function IngestionTab() {
   const [source, setSource] = useState<Source>('CSV');
 
   const [loading, setLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   // SheetDB Config
@@ -39,7 +41,7 @@ export function IngestionTab() {
     committee: '',
     country: '',
     position: '',
-    transaction_id: ''
+    institution: ''
   });
   const [previewStep, setPreviewStep] = useState(false);
 
@@ -52,6 +54,7 @@ export function IngestionTab() {
   }, []);
 
   async function loadSettings() {
+    setIsInitialLoading(true);
     try {
       const data = await fetchSystemSettingsAction();
       if (data && data.sheetdb_url) {
@@ -59,6 +62,8 @@ export function IngestionTab() {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsInitialLoading(false);
     }
   }
 
@@ -133,7 +138,7 @@ export function IngestionTab() {
 
   const autoMapHeaders = (headers: string[]) => {
     const newMappings: Record<string, string> = {
-      full_name: '', email: '', committee: '', country: '', position: '', transaction_id: ''
+      full_name: '', email: '', committee: '', country: '', position: '', institution: ''
     };
     
     const hLower = headers.map(h => h.toLowerCase());
@@ -145,7 +150,7 @@ export function IngestionTab() {
       if (lower.includes('committee') && !newMappings.committee) newMappings.committee = h;
       if (lower.includes('country') && !newMappings.country) newMappings.country = h;
       if ((lower.includes('position') || lower.includes('type') || lower.includes('role')) && !newMappings.position) newMappings.position = h;
-      if ((lower.includes('transaction') || lower.includes('trx') || lower.includes('payment')) && !newMappings.transaction_id) newMappings.transaction_id = h;
+      if ((lower.includes('institution') || lower.includes('school') || lower.includes('university') || lower.includes('org')) && !newMappings.institution) newMappings.institution = h;
     });
 
     setMappings(newMappings);
@@ -184,7 +189,7 @@ export function IngestionTab() {
         committee: mappings.committee ? (row[mappings.committee]?.trim() || null) : null,
         country: mappings.country ? (row[mappings.country]?.trim() || null) : null,
         position: mappings.position ? (row[mappings.position]?.trim() || null) : null,
-        transaction_id: mappings.transaction_id ? (row[mappings.transaction_id]?.trim() || null) : null,
+        institution: mappings.institution ? (row[mappings.institution]?.trim() || null) : null,
         qr_token: qrToken,
         mail_status: 'PENDING'
       });
@@ -234,7 +239,7 @@ export function IngestionTab() {
          Committee: d.committee || '',
          Country: d.country || '',
          Position: d.position || '',
-         TransactionID: d.transaction_id || '',
+         Institution: d.institution || '',
          QRToken: d.qr_token,
          RegisteredAt: d.created_at
       }));
@@ -274,7 +279,7 @@ export function IngestionTab() {
             throw new Error(
               "SheetDB requires headers to exist before pushing data! " +
               "Please open your Google Sheet and paste these exact headers into Row 1: " +
-              "ID, DelegateCode, FullName, Email, Committee, Country, Position, TransactionID, QRToken, RegisteredAt"
+              "ID, DelegateCode, FullName, Email, Committee, Country, Position, Institution, QRToken, RegisteredAt"
             );
           }
           throw new Error(errMsg);
@@ -292,7 +297,6 @@ export function IngestionTab() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-4xl mx-auto">
-      
       <div className="flex items-center justify-between pb-4 border-b border-white/5">
         <div>
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
@@ -302,64 +306,78 @@ export function IngestionTab() {
           <p className="text-sm text-zinc-400">Map and synchronize massive datasets bi-directionally.</p>
         </div>
 
-        <div className="flex items-center bg-black/40 rounded-lg p-1 border border-white/5">
-          <button 
-            onClick={() => {setMode('IMPORT'); setPreviewStep(false); setMessage(null);}} 
-            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${mode === 'IMPORT' ? 'bg-blue-600 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
-          >
-            IMPORT
-          </button>
-          <button 
-             onClick={() => {setMode('EXPORT'); setPreviewStep(false); setMessage(null);}} 
-            className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${mode === 'EXPORT' ? 'bg-emerald-600 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
-          >
-            EXPORT
-          </button>
-        </div>
+        {isInitialLoading ? (
+          <Skeleton className="h-10 w-48 rounded-lg" />
+        ) : (
+          <div className="flex items-center bg-black/40 rounded-lg p-1 border border-white/5">
+            <button 
+              onClick={() => {setMode('IMPORT'); setPreviewStep(false); setMessage(null);}} 
+              className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${mode === 'IMPORT' ? 'bg-blue-600 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
+            >
+              IMPORT
+            </button>
+            <button 
+               onClick={() => {setMode('EXPORT'); setPreviewStep(false); setMessage(null);}} 
+              className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${mode === 'EXPORT' ? 'bg-emerald-600 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
+            >
+              EXPORT
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Global Config Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-lg relative overflow-hidden">
-           <h3 className="text-sm font-bold mb-4 text-zinc-100 flex items-center gap-2">
-             <Settings2 className="w-4 h-4 text-blue-400" /> API Connections
-           </h3>
-           <div className="space-y-3">
-             <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">SheetDB.io URL endpoint</label>
-             <div className="flex gap-2">
-               <input 
-                 type="text" 
-                 value={sheetUrl}
-                 onChange={(e) => setSheetUrl(e.target.value)}
-                 className="flex-1 bg-black/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 transition outline-none font-mono"
-                 placeholder="https://sheetdb.io/api/v1/..."
-               />
-               <button onClick={saveSheetUrl} disabled={isSavingUrl} className="px-4 py-2 bg-blue-600/20 text-blue-400 font-bold rounded-lg border border-blue-500/30 hover:bg-blue-600/30 transition shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-                 {isSavingUrl ? '...' : 'Save'}
-               </button>
-             </div>
-             <p className="text-[10px] text-zinc-500 font-semibold">Connects directly to your Google Sheet without hardcoding logic.</p>
-           </div>
+      {isInitialLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-48 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+          <Skeleton className="h-96 w-full md:col-span-2 rounded-xl" />
         </div>
+      ) : (
+        <>
+          {/* Global Config Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-lg relative overflow-hidden">
+               <h3 className="text-sm font-bold mb-4 text-zinc-100 flex items-center gap-2">
+                 <Settings2 className="w-4 h-4 text-blue-400" /> API Connections
+               </h3>
+               <div className="space-y-3">
+                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest">SheetDB.io URL endpoint</label>
+                 <div className="flex gap-2">
+                   <input 
+                     type="text" 
+                     value={sheetUrl}
+                     onChange={(e) => setSheetUrl(e.target.value)}
+                     className="flex-1 bg-black/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 transition outline-none font-mono"
+                     placeholder="https://sheetdb.io/api/v1/..."
+                   />
+                   <button onClick={saveSheetUrl} disabled={isSavingUrl} className="px-4 py-2 bg-blue-600/20 text-blue-400 font-bold rounded-lg border border-blue-500/30 hover:bg-blue-600/30 transition shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                     {isSavingUrl ? '...' : 'Save'}
+                   </button>
+                 </div>
+                 <p className="text-[10px] text-zinc-500 font-semibold">Connects directly to your Google Sheet without hardcoding logic.</p>
+               </div>
+            </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-center">
-           <h3 className="text-sm font-bold mb-4 text-zinc-100 flex items-center gap-2">
-             <Table className="w-4 h-4 text-emerald-400" /> Target Format
-           </h3>
-           <div className="flex bg-black/50 rounded-lg p-1 border border-zinc-800">
-             {(['CSV', 'SHEETDB'] as Source[]).map(s => (
-                <button 
-                  key={s}
-                  onClick={() => setSource(s)}
-                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded transition-all flex justify-center items-center gap-2 ${source === s ? 'bg-zinc-800 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}
-                >
-                  {s === 'CSV' ? <UploadCloud className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
-                  {s === 'CSV' ? 'Local CSV' : 'Google Sheet API'}
-                </button>
-             ))}
-           </div>
-        </div>
-      </div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-center">
+              <h3 className="text-sm font-bold mb-4 text-zinc-100 flex items-center gap-2">
+                <Table className="w-4 h-4 text-emerald-400" /> Target Format
+              </h3>
+              <div className="flex bg-black/50 rounded-lg p-1 border border-zinc-800">
+                {(['CSV', 'SHEETDB'] as Source[]).map(s => (
+                  <button 
+                    key={s}
+                    onClick={() => setSource(s)}
+                    className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded transition-all flex justify-center items-center gap-2 ${source === s ? 'bg-zinc-800 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'}`}
+                  >
+                    {s === 'CSV' ? <UploadCloud className="w-4 h-4" /> : <LinkIcon className="w-4 h-4" />}
+                    {s === 'CSV' ? 'Local CSV' : 'Google Sheet API'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {message && (
         <div className={`p-4 rounded-xl flex items-start gap-3 border shadow-lg ${message.type === 'success' ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-400' : 'bg-red-950/30 border-red-500/30 text-red-400'}`}>
