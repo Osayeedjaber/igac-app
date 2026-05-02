@@ -20,10 +20,18 @@ const BASE_ROLES = [
     },
     {
         id: "del",
-        title: "Delegate Registration",
-        desc: "Secure your elite position in the assembly. Debate, lobby, and pass resolutions.",
+        title: "Single Delegation",
+        desc: "Secure your elite position in the assembly. Debate, lobby, and pass resolutions individually.",
         icon: Globe,
         slug: "/imun/register/del",
+        theme: "dark"
+    },
+    {
+        id: "ddel",
+        title: "Double Delegation",
+        desc: "Partner up with another delegate to represent a nation in joint committees.",
+        icon: Users, // Using Users icon for Double Delegation
+        slug: "/imun/register/ddel",
         theme: "dark"
     },
     {
@@ -51,6 +59,11 @@ function getConfiguredRoles(settings: SiteSettingsPublic) {
         },
         {
             ...BASE_ROLES[2],
+            status: (settings.imun_ddel_open ? "open" : "soon") as RegistrationStatus,
+            form: settings.imun_ddel_url || "#"
+        },
+        {
+            ...BASE_ROLES[3],
             status: (settings.imun_ca_open ? "open" : "soon") as RegistrationStatus,
             form: settings.imun_ca_url || "#"
         }
@@ -62,9 +75,11 @@ function getConfiguredRoles(settings: SiteSettingsPublic) {
     
     return [
         openRoles.find(r => r.id === "ca"),
+        openRoles.find(r => r.id === "ddel"),
         openRoles.find(r => r.id === "del"),
         openRoles.find(r => r.id === "eb"),
         otherRoles.find(r => r.id === "ca"),
+        otherRoles.find(r => r.id === "ddel"),
         otherRoles.find(r => r.id === "del"),
         otherRoles.find(r => r.id === "eb")
     ].filter(Boolean) as typeof roles;
@@ -155,7 +170,7 @@ export default function FormsGridSection({ settings }: { settings: SiteSettingsP
 
     return (
         <section className="relative z-10 py-12 container mx-auto px-6 max-w-7xl">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 
                 {orderedRoles.map((role, i) => {
                     const Icon = role.icon;

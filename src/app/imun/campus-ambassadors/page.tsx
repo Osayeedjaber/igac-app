@@ -16,7 +16,7 @@ export default function CampusAmbassadorsPage() {
                 
                 {/* Header & Empty State Call to Action */}
                 <div className="text-center max-w-4xl mx-auto mb-20">
-                    <Reveal>
+                    <Reveal width="100%">
                         <h1 className="font-primary font-bold text-4xl md:text-5xl lg:text-7xl text-white mb-6 uppercase tracking-tight">
                             Campus <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-[#f2c45f] to-amber-600">Ambassadors</span>
                         </h1>
@@ -26,7 +26,7 @@ export default function CampusAmbassadorsPage() {
                         </p>
                         
                         <div className="flex justify-center w-full mt-6">
-                            <Link href="/imun/register/ca">
+                            <Link href="/imun/register/ca" className="w-full sm:w-auto inline-flex justify-center">
                                 <motion.button
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
@@ -52,8 +52,8 @@ export default function CampusAmbassadorsPage() {
                 <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
                     
                     {/* Why Become a Campus Ambassador */}
-                    <div className="space-y-8">
-                        <Reveal delay={0.2}>
+                    <div className="space-y-8 w-full">
+                        <Reveal delay={0.2} width="100%">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="h-px flex-1 bg-gradient-to-r from-[#f2c45f]/50 to-transparent max-w-[50px]" />
                                 <h3 className="font-primary text-2xl md:text-3xl font-bold uppercase tracking-widest text-[#f2c45f]">
@@ -108,7 +108,7 @@ export default function CampusAmbassadorsPage() {
                         </Reveal>
 
                         {/* Exclusive Benefits & Rewards */}
-                        <Reveal delay={0.3}>
+                        <Reveal delay={0.3} width="100%">
                             <div className="flex items-center gap-4 mb-6 mt-12">
                                 <div className="h-px flex-1 bg-gradient-to-r from-[#f2c45f]/50 to-transparent max-w-[50px]" />
                                 <h3 className="font-primary text-2xl md:text-3xl font-bold uppercase tracking-widest text-[#f2c45f]">
@@ -133,8 +133,8 @@ export default function CampusAmbassadorsPage() {
                     </div>
 
                     {/* Requirements */}
-                    <div>
-                        <Reveal delay={0.4} className="sticky top-32">
+                    <div className="w-full">
+                        <Reveal delay={0.4} className="sticky top-32" width="100%">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="h-px flex-1 bg-gradient-to-r from-[#f2c45f]/50 to-transparent max-w-[50px]" />
                                 <h3 className="font-primary text-2xl md:text-3xl font-bold uppercase tracking-widest text-[#f2c45f]">

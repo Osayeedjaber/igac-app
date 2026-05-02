@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, UploadCloud, LayoutList, Activity, LogOut, ShieldAlert, Radio } from 'lucide-react';
+import { Users, UploadCloud, LayoutList, Activity, LogOut, ShieldAlert, Radio, PenTool } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +14,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-type Tab = 'registry' | 'ingestion' | 'committees' | 'logs' | 'secretariat' | 'command';
+type Tab = 'registry' | 'ingestion' | 'committees' | 'logs' | 'secretariat' | 'command' | 'templates';
 
 export default function CrmClient() {
   const [activeTab, setActiveTab] = useState<Tab>('registry');
@@ -57,6 +57,7 @@ export default function CrmClient() {
       case 'logs': return 'Live Scan Logs';
       case 'secretariat': return 'Secretariat Profiles';
       case 'command': return 'Command Center';
+      case 'templates': return 'Pass & Email Builder';
       default: return '';
     }
   };
@@ -117,6 +118,7 @@ export default function CrmClient() {
           <TabButton active={activeTab === 'registry'} onClick={() => setActiveTab('registry')} icon={<Users className="w-4 h-4" />} label="Registry" />
           <TabButton active={activeTab === 'ingestion'} onClick={() => setActiveTab('ingestion')} icon={<UploadCloud className="w-4 h-4" />} label="Ingestion" />
           <TabButton active={activeTab === 'committees'} onClick={() => setActiveTab('committees')} icon={<LayoutList className="w-4 h-4" />} label="Committees" />
+          <TabButton active={activeTab === 'templates'} onClick={() => setActiveTab('templates')} icon={<PenTool className="w-4 h-4" />} label="Builder" />
           <TabButton active={activeTab === 'logs'} onClick={() => setActiveTab('logs')} icon={<Activity className="w-4 h-4" />} label="Scan Logs" />
           <TabButton active={activeTab === 'secretariat'} onClick={() => setActiveTab('secretariat')} icon={<ShieldAlert className="w-4 h-4" />} label="Secretariat" />
           <div className="w-px h-6 bg-white/10 mx-2 self-center" />
@@ -159,6 +161,7 @@ export default function CrmClient() {
             {activeTab === 'committees' && <CommitteesTab />}
             {activeTab === 'logs' && <ScanLogsTab />}
             {activeTab === 'secretariat' && <SecretariatTab />}
+            {activeTab === 'templates' && <TemplatesTab />}
             {activeTab === 'command' && <CommandCenterTab />}
           </motion.div>
         </AnimatePresence>
@@ -180,6 +183,7 @@ import { CommitteesTab } from './CommitteesTab';
 import { ScanLogsTab } from './ScanLogsTab';
 import { SecretariatTab } from './SecretariatTab';
 import { CommandCenterTab } from './CommandCenterTab';
+import { TemplatesTab } from './TemplatesTab';
 import { CommandPalette } from './CommandPalette';
 import { fetchDelegatesAction } from './actions';
 

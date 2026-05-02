@@ -11,9 +11,11 @@ export type SiteSettingsPublic = {
   announcement: string;
   imun_eb_open?: boolean;
   imun_del_open?: boolean;
+  imun_ddel_open?: boolean;
   imun_ca_open?: boolean;
   imun_eb_url?: string;
   imun_del_url?: string;
+  imun_ddel_url?: string;
   imun_ca_url?: string;
   imun_registration_deadline?: string;
   imun_info_date_value?: string;
@@ -59,9 +61,11 @@ export async function getSiteSettings(): Promise<SiteSettingsPublic> {
     announcement: "",
     imun_eb_open: false,
     imun_del_open: true,
+    imun_ddel_open: true,
     imun_ca_open: true,
     imun_eb_url: "",
     imun_del_url: "https://docs.google.com/forms/d/e/1FAIpQLScXGZ1D1S17Q3eRz5T5J6h2K4F6nN6x8G1lK0k4J4Pz9_W_1w/viewform",
+    imun_ddel_url: "",
     imun_ca_url: "https://docs.google.com/forms/d/e/1FAIpQLSd9W8A97XQXYx7rVw8J9Q61lQ_wOW2Q7P1D4PzE4B7vQ5Vxw/viewform",
   };
   if (isSupabaseReady()) {

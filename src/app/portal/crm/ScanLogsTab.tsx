@@ -45,64 +45,66 @@ export function ScanLogsTab() {
         </button>
       </div>
 
-      <div className="bg-black/60 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl relative">
+      <div className="bg-black/60 backdrop-blur-xl border border-white/5 rounded-3xl overflow-x-auto shadow-2xl relative">
         <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 blur-[100px] pointer-events-none" />
         
-        <table className="w-full text-left text-sm whitespace-nowrap relative z-10">
-          <thead className="bg-black/40 border-b border-white/5 text-zinc-500 uppercase text-[10px] font-black tracking-widest">
-            <tr>
-              <th className="px-6 py-5">Timestamp</th>
-              <th className="px-6 py-5">Delegate</th>
-              <th className="px-6 py-5">Allocation</th>
-              <th className="px-6 py-5">Checkpoint</th>
-              <th className="px-6 py-5">Scanned By</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {loading && logs.length === 0 ? (
+        <div className="min-w-full inline-block align-middle">
+          <table className="min-w-full text-left text-sm whitespace-nowrap relative z-10">
+            <thead className="bg-black/40 border-b border-white/5 text-zinc-500 uppercase text-[10px] font-black tracking-widest">
               <tr>
-                <td colSpan={5} className="px-6 py-16 text-center text-zinc-500 font-bold uppercase tracking-widest text-xs">Synchronizing Feed...</td>
+                <th className="px-6 py-5">Timestamp</th>
+                <th className="px-6 py-5">Delegate</th>
+                <th className="px-6 py-5">Allocation</th>
+                <th className="px-6 py-5">Checkpoint</th>
+                <th className="px-6 py-5">Scanned By</th>
               </tr>
-            ) : (!logs || logs.length === 0) ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-16 text-center text-zinc-500 font-bold uppercase tracking-widest text-xs italic">No scan activity found.</td>
-              </tr>
-            ) : (
-              logs.map(log => (
-                <tr key={log.id} className="hover:bg-white/5 transition group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-start gap-2 text-zinc-300">
-                      <Clock className="w-3 h-3 text-amber-500/50" />
-                      <span className="font-mono text-xs">{format(new Date(log.scanned_at), 'hh:mm:ss a')}</span>
-                      <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold bg-zinc-900 px-1.5 py-0.5 rounded border border-white/5">{format(new Date(log.scanned_at), 'MMM dd')}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-white group-hover:text-amber-400 transition-colors">{log.delegate?.full_name || 'Deleted Record...'}</div>
-                  </td>
-                  <td className="px-6 py-4 text-zinc-400 text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-zinc-300 font-bold">{log.delegate?.committee || 'Unknown'}</span>
-                      <ChevronRight className="w-3 h-3 text-zinc-600" />
-                      <span className="text-[10px] uppercase font-black tracking-wider text-zinc-500">{log.delegate?.country || 'Unknown'}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest shadow-inner">
-                      <MapPin className="w-3 h-3" /> Day {log.day} - {log.checkpoint}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-zinc-400">
-                    <div className="flex items-center gap-2 text-xs font-bold">
-                       <User className="w-3 h-3 text-zinc-500" />
-                       {log.scanned_by?.full_name || 'System'}
-                    </div>
-                  </td>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading && logs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-16 text-center text-zinc-500 font-bold uppercase tracking-widest text-xs">Synchronizing Feed...</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (!logs || logs.length === 0) ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-16 text-center text-zinc-500 font-bold uppercase tracking-widest text-xs italic">No scan activity found.</td>
+                </tr>
+              ) : (
+                logs.map(log => (
+                  <tr key={log.id} className="hover:bg-white/5 transition group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-start gap-2 text-zinc-300">
+                        <Clock className="w-3 h-3 text-amber-500/50" />
+                        <span className="font-mono text-xs">{format(new Date(log.scanned_at), 'hh:mm:ss a')}</span>
+                        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold bg-zinc-900 px-1.5 py-0.5 rounded border border-white/5">{format(new Date(log.scanned_at), 'MMM dd')}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-white group-hover:text-amber-400 transition-colors">{log.delegate?.full_name || 'Deleted Record...'}</div>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-400 text-xs text-wrap min-w-[200px]">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-zinc-300 font-bold">{log.delegate?.committee || 'Unknown'}</span>
+                        <ChevronRight className="w-3 h-3 text-zinc-600 shrink-0" />
+                        <span className="text-[10px] uppercase font-black tracking-wider text-zinc-500">{log.delegate?.country || 'Unknown'}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black uppercase tracking-widest shadow-inner whitespace-nowrap">
+                        <MapPin className="w-3 h-3" /> Day {log.day} - {log.checkpoint}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-400">
+                      <div className="flex items-center gap-2 text-xs font-bold">
+                         <User className="w-3 h-3 text-zinc-500" />
+                         {log.scanned_by?.full_name || 'System'}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

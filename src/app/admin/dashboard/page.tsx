@@ -96,9 +96,11 @@ type SiteSettings = {
   announcement: string;
   imun_eb_open?: boolean;
   imun_del_open?: boolean;
+  imun_ddel_open?: boolean;
   imun_ca_open?: boolean;
   imun_eb_url?: string;
   imun_del_url?: string;
+  imun_ddel_url?: string;
   imun_ca_url?: string;
   imun_registration_deadline?: string;
   imun_info_date_value: string;
@@ -1305,6 +1307,15 @@ export default function AdminDashboard() {
                             <ToggleSwitch checked={siteSettings.imun_del_open ?? true} onChange={(v) => setSiteSettings({ ...siteSettings, imun_del_open: v })} />
                           </div>
                           <FormField label="Delegate Form URL" value={siteSettings.imun_del_url || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_del_url: v })} placeholder="https://forms.gle/..." />
+                        </div>
+                        
+                        {/* Double Delegate */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <h3 className="font-bold text-[#d4af37]">Double Delegate Registration</h3>
+                            <ToggleSwitch checked={siteSettings.imun_ddel_open ?? true} onChange={(v) => setSiteSettings({ ...siteSettings, imun_ddel_open: v })} />
+                          </div>
+                          <FormField label="Double Delegate Form URL" value={siteSettings.imun_ddel_url || ""} onChange={(v) => setSiteSettings({ ...siteSettings, imun_ddel_url: v })} placeholder="https://forms.gle/..." />
                         </div>
                         
                         {/* Campus Ambassador */}

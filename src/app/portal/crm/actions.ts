@@ -175,6 +175,43 @@ export async function fetchCommitteesProgressAction() {
   return { delegates, checkins };
 }
 
+export async function sendSecretariatInvitationAction(formData: FormData) {
+  await checkAuth();
+  
+  const fullName = formData.get('fullName') as string;
+  const email = formData.get('email') as string;
+
+  if (!fullName || !email) {
+    throw new Error('Name and Email are required');
+  }
+
+  // Use the internal API we just created to send the invitation
+  // We call it via a relative URL if possible or just trigger the logic
+  // Since we are in a Server Action, we can reuse the logic or fetch it.
+  // To keep it simple and consistent, we'll fetch the local API.
+  
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const response = await fetch(`${baseUrl}/api/admin/invite-secretariat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+      full_name: fullName,
+      committee: 'Logistics',
+      role: 'Secretariat Logistics'
+    })
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to send invitation');
+  }
+
+  return { success: true };
+}
+
 export async function createSecretariatAccountAction(formData: FormData) {
   await checkAuth();
   const supabase = getServiceSupabase();
@@ -232,7 +269,14 @@ export async function fetchSecretariatsAction() {
 
   if (profError) throw new Error(profError.message);
 
-  // 2. Count total check-ins per secretariat
+  // 2. Get pending invitations
+  const { data: invites, error: inviteError } = await supabase
+    .from('secretariat_invites')
+    .select('*')
+    .eq('used', false)
+    .order('created_at', { ascending: false });
+
+  // 3. Count total check-ins per secretariat
   const { data: checkins, error: chkError } = await supabase
     .from('delegate_checkins')
     .select('scanned_by_id');
@@ -246,13 +290,28 @@ export async function fetchSecretariatsAction() {
     }
   }
 
-  return (profiles || []).map((p: any) => ({
+  // Combine profiles and pending invites
+  const activeMembers = (profiles || []).map((p: any) => ({
     id: p.id,
     full_name: p.full_name,
+    username: p.username,
+    email: p.email,
     role: p.role,
-    created_at: p.created_at,
-    scan_count: counts[p.id] || 0
+    scan_count: counts[p.id] || 0,
+    status: 'ACTIVE'
   }));
+
+  const pendingMembers = (invites || []).map((i: any) => ({
+    id: i.id,
+    full_name: i.full_name,
+    role: i.role,
+    email: i.email,
+    scan_count: 0,
+    status: 'PENDING',
+    isInvite: true
+  }));
+
+  return [...pendingMembers, ...activeMembers];
 }
 
 export async function updateSecretariatAccountAction(id: string, formData: FormData) {
@@ -262,6 +321,7 @@ export async function updateSecretariatAccountAction(id: string, formData: FormD
   const fullName = formData.get('fullName') as string;
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
+  const username = formData.get('username') as string;
 
   if (!fullName || !email) {
     throw new Error('Full Name and Email are required');
@@ -269,6 +329,7 @@ export async function updateSecretariatAccountAction(id: string, formData: FormD
 
   // 1. Update Auth user
   const authUpdates: any = { email };
+  authUpdates.user_metadata = { full_name: fullName, username: username };
   if (password) {
     authUpdates.password = password;
   }
@@ -279,7 +340,10 @@ export async function updateSecretariatAccountAction(id: string, formData: FormD
   // 2. Update Profile
   const { error: profileError } = await supabase
     .from('secretariat_profiles')
-    .update({ full_name: fullName })
+    .update({ 
+      full_name: fullName,
+      username: username
+    })
     .eq('id', id);
 
   if (profileError) throw new Error('Profile Update Error: ' + profileError.message);
@@ -291,7 +355,23 @@ export async function deleteSecretariatAccountAction(id: string) {
   await checkAuth();
   const supabase = getServiceSupabase();
 
-  // 1. Delete from custom profiles table
+  // Try to find if it's a pending invite first
+  const { data: invite } = await supabase
+    .from('secretariat_invites')
+    .select('id')
+    .eq('id', id)
+    .single();
+
+  if (invite) {
+    const { error } = await supabase
+      .from('secretariat_invites')
+      .delete()
+      .eq('id', id);
+    if (error) throw new Error('Invite Revoke Error: ' + error.message);
+    return { success: true };
+  }
+
+  // Otherwise, delete the profile and the auth user
   const { error: profileError } = await supabase
     .from('secretariat_profiles')
     .delete()
@@ -299,7 +379,6 @@ export async function deleteSecretariatAccountAction(id: string) {
 
   if (profileError) throw new Error('Profile Delete Error: ' + profileError.message);
 
-  // 2. Delete from Auth (this wipes identities too)
   const { error: authError } = await supabase.auth.admin.deleteUser(id);
   if (authError) throw new Error('Auth Delete Error: ' + authError.message);
 
